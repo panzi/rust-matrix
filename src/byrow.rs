@@ -1,6 +1,5 @@
 use crate::{Matrix, Number};
 
-// TOOD: for row-wise combining matrix and vector (default is column wise)
 #[repr(transparent)]
 #[derive(Debug, Clone)]
 pub struct IntoByRow<const X: usize, const Y: usize, T: Number=f64>

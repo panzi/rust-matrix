@@ -547,11 +547,12 @@ macro_rules! impl_ops {
             type Output = Matrix<X, Y, T>;
 
             #[inline]
-            fn $op(self, rhs: Matrix<X, Y, T>) -> Self::Output {
-                let mut res = self.clone();
-                res.$op_assign(&rhs);
+            fn $op(self, mut rhs: Matrix<X, Y, T>) -> Self::Output {
+                for index in 0..X * Y {
+                    rhs.data[index] = self.data[index].$op(rhs.data[index]);
+                }
 
-                res
+                rhs
             }
         }
     };
@@ -582,11 +583,12 @@ macro_rules! impl_ops {
             type Output = Matrix<X, Y, $type>;
 
             #[inline]
-            fn $op(self, rhs: Matrix<X, Y, $type>) -> Self::Output {
-                let mut res: Self::Output = self.into();
-                res.$op_assign(&rhs);
+            fn $op(self, mut rhs: Matrix<X, Y, $type>) -> Self::Output {
+                for x in rhs.data.iter_mut() {
+                    *x = self.$op(*x);
+                }
 
-                res
+                rhs
             }
         }
     };
@@ -931,8 +933,9 @@ macro_rules! impl_ops {
             fn $op_assign(&mut self, rhs: &Vector<Y, T>) {
                 for y in 0..Y {
                     let yoffset = X * y;
+                    let rhs_y = rhs[y];
                     for x in 0..X {
-                        self.data[yoffset + x].$op_assign(rhs[y]);
+                        self.data[yoffset + x].$op_assign(rhs_y);
                     }
                 }
             }
@@ -961,8 +964,7 @@ macro_rules! impl_ops {
             }
         }
 
-        // ======== Vector =====================================================
-        // TODO: ByRow, ByRowMut, IntoByRow for Vector, &Vector, &mut Vector
+        // ======== Vector x Matrix ============================================
 
         impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
@@ -995,9 +997,10 @@ macro_rules! impl_ops {
             fn $op(self, mut rhs: Matrix<X, Y, T>) -> Self::Output {
                 for y in 0..Y {
                     let yoffset = y * X;
+                    let self_y = self[y];
                     for x in 0..X {
                         let index = yoffset + x;
-                        rhs.data[index] = self[y].$op(rhs.data[index]);
+                        rhs.data[index] = self_y.$op(rhs.data[index]);
                     }
                 }
 
@@ -1035,6 +1038,138 @@ macro_rules! impl_ops {
             #[inline]
             fn $op(self, rhs: &Matrix<X, Y, T>) -> Self::Output {
                 (self as &Vector<Y, T>).$op(rhs)
+            }
+        }
+
+        // ======== ByRow x Vector =============================================
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByRow<'_, X, Y, T>> for Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: ByRow<'_, X, Y, T>) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByRow<'_, X, Y, T>> for &mut Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: ByRow<'_, X, Y, T>) -> Self::Output {
+                (self as &Vector<X, T>).$op(rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByRow<'_, X, Y, T>> for &Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: ByRow<'_, X, Y, T>) -> Self::Output {
+                let mut res = rhs.matrix.clone();
+                for y in 0..Y {
+                    let yoffset = X * y;
+                    for x in 0..X {
+                        let index = yoffset + x;
+                        res.data[index] = self[x].$op(res.data[index]);
+                    }
+                }
+
+                res
+            }
+        }
+
+        // ======== ByRowMut x Vector ==========================================
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByRowMut<'_, X, Y, T>> for Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: ByRowMut<'_, X, Y, T>) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByRowMut<'_, X, Y, T>> for &mut Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: ByRowMut<'_, X, Y, T>) -> Self::Output {
+                (self as &Vector<X, T>).$op(rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByRowMut<'_, X, Y, T>> for &Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: ByRowMut<'_, X, Y, T>) -> Self::Output {
+                let mut res = rhs.matrix.clone();
+                for y in 0..Y {
+                    let yoffset = X * y;
+                    for x in 0..X {
+                        let index = yoffset + x;
+                        res.data[index] = self[x].$op(res.data[index]);
+                    }
+                }
+
+                res
+            }
+        }
+
+        // ======== IntoByRow x Vector =========================================
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByRow<X, Y, T>> for Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: IntoByRow<X, Y, T>) -> Self::Output {
+                (&self).$op(rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByRow<X, Y, T>> for &mut Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: IntoByRow<X, Y, T>) -> Self::Output {
+                (self as &Vector<X, T>).$op(rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByRow<X, Y, T>> for &Vector<X, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: IntoByRow<X, Y, T>) -> Self::Output {
+                let mut res = rhs.matrix;
+                for y in 0..Y {
+                    let yoffset = X * y;
+                    for x in 0..X {
+                        let index = yoffset + x;
+                        res.data[index] = self[x].$op(res.data[index]);
+                    }
+                }
+
+                res
             }
         }
     };
