@@ -5,6 +5,7 @@ use std::fmt::{Display, Debug};
 
 use crate::Vector;
 use crate::assert::{Assert, IsTrue};
+use crate::byrow::{ByRow, ByRowMut, IntoByRow};
 use crate::number::Number;
 use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign};
 
@@ -15,14 +16,6 @@ where [T; X * Y]: Sized
 {
     data: Box<[T; X * Y]>
 }
-
-// TOOD: for row-wise combining matrix and vector (default is column wise)
-// #[repr(transparent)]
-// pub struct MatrixByRow<'a, const X: usize, const Y: usize, T: Number=f64>
-// where [T; X * Y]: Sized
-// {
-//     matrix: &'a mut Matrix<X, Y, T>
-// }
 
 impl<const X: usize, const Y: usize, T: Number> Matrix<X, Y, T>
 where [T; X * Y]: Sized
@@ -131,13 +124,29 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
-    pub fn transpose_assign(&mut self) where Assert<{ X == Y }>: IsTrue {
+    pub fn transpose_assign(&mut self)
+    where [T; Y * X]: Sized, Assert<{ X == Y }>: IsTrue {
         for y in 1..Y {
             let yoffset = y * X;
             for x in 0..y {
                 self.data.swap(yoffset + x, x * X + y);
             }
         }
+    }
+
+    #[inline]
+    pub fn into_by_row(self) -> IntoByRow<X, Y, T> {
+        IntoByRow::new(self)
+    }
+
+    #[inline]
+    pub fn by_row(&self) -> ByRow<'_, X, Y, T> {
+        ByRow::new(self)
+    }
+
+    #[inline]
+    pub fn by_row_mut(&mut self) -> ByRowMut<'_, X, Y, T> {
+        ByRowMut::new(self)
     }
 }
 
@@ -659,6 +668,34 @@ macro_rules! impl_ops {
             }
         }
 
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>> for IntoByRow<X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Self;
+
+            #[inline]
+            fn $op(self, rhs: Vector<X, T>) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>> for IntoByRow<X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Self;
+
+            #[inline]
+            fn $op(mut self, rhs: &Vector<X, T>) -> Self::Output {
+                for y in 0..Y {
+                    let yoffset = X * y;
+                    for x in 0..X {
+                        self.matrix.data[yoffset + x].$op_assign(rhs[x]);
+                    }
+                }
+                self
+            }
+        }
+
         // ======== ref ========================================================
 
         impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>> for &Matrix<X, Y, T>
@@ -711,6 +748,36 @@ macro_rules! impl_ops {
             fn $op(self, rhs: &Vector<Y, T>) -> Self::Output {
                 let mut res = self.clone();
                 res.$op_assign(rhs);
+
+                res
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>> for ByRow<'_, X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: Vector<X, T>) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>> for ByRow<'_, X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: &Vector<X, T>) -> Self::Output {
+                let mut res = self.matrix.clone();
+                for y in 0..Y {
+                    let yoffset = X * y;
+                    for x in 0..X {
+                        res.data[yoffset + x].$op_assign(rhs[x]);
+                    }
+                }
 
                 res
             }
@@ -773,6 +840,36 @@ macro_rules! impl_ops {
             }
         }
 
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>> for ByRowMut<'_, X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: Vector<X, T>) -> Self::Output {
+                self.$op(&rhs)
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>> for ByRowMut<'_, X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            type Output = Matrix<X, Y, T>;
+
+            #[inline]
+            fn $op(self, rhs: &Vector<X, T>) -> Self::Output {
+                let mut res = self.matrix.clone();
+                for y in 0..Y {
+                    let yoffset = X * y;
+                    for x in 0..X {
+                        res.data[yoffset + x].$op_assign(rhs[x]);
+                    }
+                }
+
+                res
+            }
+        }
+
         // ======== assign =====================================================
 
         impl<const X: usize, const Y: usize, T: Number> $trait_assign for Matrix<X, Y, T>
@@ -806,6 +903,18 @@ macro_rules! impl_ops {
             }
         }
 
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&T> for Matrix<X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            #[inline]
+            fn $op_assign(&mut self, rhs: &T) {
+                let rhs = *rhs;
+                for index in 0..X * Y {
+                    self.data[index].$op_assign(rhs);
+                }
+            }
+        }
+
         impl<const X: usize, const Y: usize, T: Number> $trait_assign<Vector<Y, T>> for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
@@ -829,19 +938,31 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&T> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<Vector<X, T>> for ByRowMut<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
-            fn $op_assign(&mut self, rhs: &T) {
-                let rhs = *rhs;
-                for index in 0..X * Y {
-                    self.data[index].$op_assign(rhs);
+            fn $op_assign(&mut self, rhs: Vector<X, T>) {
+                self.$op_assign(&rhs);
+            }
+        }
+
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&Vector<X, T>> for ByRowMut<'_, X, Y, T>
+        where [T; X * Y]: Sized $(, $($where)*)?
+        {
+            #[inline]
+            fn $op_assign(&mut self, rhs: &Vector<X, T>) {
+                for y in 0..Y {
+                    let yoffset = X * y;
+                    for x in 0..X {
+                        self.matrix.data[yoffset + x].$op_assign(rhs[x]);
+                    }
                 }
             }
         }
 
         // ======== Vector =====================================================
+        // TODO: ByRow, ByRowMut, IntoByRow for Vector, &Vector, &mut Vector
 
         impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?

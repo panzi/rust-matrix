@@ -7,6 +7,7 @@ mod vector;
 mod matrix;
 mod assert;
 pub mod ops;
+pub mod byrow;
 
 pub use number::*;
 pub use vector::*;
