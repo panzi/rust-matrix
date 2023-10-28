@@ -61,3 +61,9 @@ pub fn cross<Lhs, Rhs>(lhs: Lhs, rhs: Rhs) -> Lhs::Output
 where Lhs: Cross<Rhs> {
     lhs.cross(rhs)
 }
+
+pub trait Slice<Idx: ?Sized> {
+    type Output;
+
+    fn slice(&self, index: Idx) -> Self::Output;
+}

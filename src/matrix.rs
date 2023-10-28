@@ -7,7 +7,8 @@ use crate::Vector;
 use crate::assert::{Assert, IsTrue};
 use crate::bycolumn::{ByColumn, ByColumnMut, IntoByColumn};
 use crate::number::Number;
-use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign};
+use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign, Slice};
+use crate::range::RangeIter;
 
 #[repr(transparent)]
 #[derive(Clone)]
@@ -108,6 +109,14 @@ where [T; X * Y]: Sized
         Matrix { data: Box::new(self.data.map(f)) }
     }
 
+    #[inline]
+    pub fn map_assign<F, U>(&mut self, mut f: F)
+    where F: FnMut(T) -> T {
+        for x in self.data.iter_mut() {
+            *x = f(*x);
+        }
+    }
+
     pub fn transpose(&self) -> Matrix<Y, X, T>
     where [T; Y * X]: Sized {
         // TODO: MaybeUninit?
@@ -121,6 +130,21 @@ where [T; X * Y]: Sized
         }
 
         Matrix { data }
+    }
+
+    pub fn transpose_map<F, U>(&self, mut f: F) -> Matrix<Y, X, U>
+    where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
+        // TODO: MaybeUninit?
+        let mut data = Box::new([U::default(); Y * X]);
+
+        for y in 0..Y {
+            let yoffset = y * X;
+            for x in 0..X {
+                data[x * Y + y] = f(self.data[yoffset + x]);
+            }
+        }
+
+        Matrix::from(data)
     }
 
     #[inline]
@@ -624,6 +648,120 @@ where [T; X * Y]: Sized
     #[inline]
     fn get_mut(&mut self, (x, y): (usize, usize)) -> Option<&mut Self::Output> {
         self.data.get_mut(X * y + x)
+    }
+}
+
+// ======== Slice ==============================================================
+
+impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeX, RangeY)> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
+{
+    type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
+
+    #[inline]
+    fn slice(&self, ranges: (RangeX, RangeY)) -> Self::Output {
+        self.slice(&ranges)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<&mut (RangeX, RangeY)> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
+{
+    type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
+
+    #[inline]
+    fn slice(&self, ranges: &mut (RangeX, RangeY)) -> Self::Output {
+        self.slice(ranges as &(RangeX, RangeY))
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<&(RangeX, RangeY)> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
+{
+    type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
+
+    #[inline]
+    fn slice(&self, (x_range, y_range): &(RangeX, RangeY)) -> Self::Output {
+        let mut data = Box::new([T::default(); RangeX::LEN * RangeY::LEN]);
+
+        let x_iter = x_range.iter();
+        let mut index = 0;
+        for y in y_range.iter() {
+            for x in x_iter.clone() {
+                data[index] = self.data[y * RangeX::LEN + x];
+                index += 1;
+            }
+        }
+
+        Matrix { data }
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: [(usize, usize); N]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [(usize, usize); N]) -> Self::Output {
+        self.slice(coords as &[(usize, usize); N])
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[(usize, usize); N]) -> Self::Output {
+        let data = Box::new(coords.map(|(x, y)| self.data[y * X + x]));
+
+        Vector::from(data)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(coords as &[[(usize, usize); X2]; Y2])
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for Matrix<X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[[(usize, usize); X2]; Y2]) -> Self::Output {
+        Matrix::from(coords.map(|row| row.map(|(x, y)| self.data[y * X + x])))
     }
 }
 

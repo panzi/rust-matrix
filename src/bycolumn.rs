@@ -68,6 +68,12 @@ where [T; X * Y]: Sized {
 
         Iter { data: self.matrix.into_data(), x: 0 }
     }
+
+    #[inline]
+    pub fn map<F, U>(self, f: F) -> Matrix<Y, X, U>
+    where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
+        self.matrix.transpose_map(f)
+    }
 }
 
 impl<'a, const X: usize, const Y: usize, T: Number> ByColumn<'a, X, Y, T>
@@ -91,6 +97,12 @@ where [T; X * Y]: Sized {
             Vector::from(data)
         })
     }
+
+    #[inline]
+    pub fn map<F, U>(&self, f: F) -> Matrix<Y, X, U>
+    where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
+        self.matrix.transpose_map(f)
+    }
 }
 
 impl<'a, const X: usize, const Y: usize, T: Number> ByColumnMut<'a, X, Y, T>
@@ -113,5 +125,11 @@ where [T; X * Y]: Sized {
 
             Vector::from(data)
         })
+    }
+
+    #[inline]
+    pub fn map<F, U>(&self, f: F) -> Matrix<Y, X, U>
+    where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
+        self.matrix.transpose_map(f)
     }
 }
