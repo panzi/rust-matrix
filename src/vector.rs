@@ -5,7 +5,8 @@ use std::fmt::{Display, Debug};
 use crate::Matrix;
 use crate::assert::{IsTrue, Assert};
 use crate::number::Number;
-use crate::ops::{Get, GetMut, Pow, PowAssign, Unit};
+use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Slice};
+use crate::range::{RangeIter, Range};
 
 #[repr(transparent)]
 #[derive(PartialEq, Clone)]
@@ -60,6 +61,11 @@ impl<const N: usize, T: Number> Vector<N, T> {
     where F: FnMut(T) -> U, U: Number {
         Vector { data: Box::new(self.data.map(f)) }
     }
+
+    #[inline]
+    pub const fn range(&self) -> Range::<0, N> {
+        Range::<0, N>()
+    }
 }
 
 impl<const N: usize, T: Number> Eq
@@ -73,6 +79,24 @@ impl<const N: usize, T: Number> IntoIterator for Vector<N, T> {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.data.into_iter()
+    }
+}
+
+impl<const N: usize, T: Number> AsRef<Self> for Vector<N, T>
+where [T; N]: Sized
+{
+    #[inline]
+    fn as_ref(&self) -> &Self {
+        self
+    }
+}
+
+impl<const N: usize, T: Number> AsRef<[T; N]> for Vector<N, T>
+where [T; N]: Sized
+{
+    #[inline]
+    fn as_ref(&self) -> &[T; N] {
+        &self.data
     }
 }
 
@@ -217,6 +241,50 @@ impl<const N: usize, T: Number> GetMut<usize> for Vector<N, T> {
         self.data.get_mut(index)
     }
 }
+
+// ======== Slice ==============================================================
+
+impl<const N: usize, T: Number, Range: RangeIter> Slice<Range> for Vector<N, T>
+where [T; N]: Sized, [T; Range::LEN]: Sized
+{
+    type Output = Vector<{ Range::LEN }, T>;
+
+    #[inline]
+    fn slice(&self, range: Range) -> Self::Output {
+        let mut iter = range.iter();
+        let data = Box::new([(); Range::LEN].map(|_| self.data[iter.next().unwrap()]));
+
+        Vector { data }
+    }
+}
+
+impl<const N: usize, T: Number, const M: usize> Slice<[usize; M]> for Vector<N, T>
+where [T; N]: Sized, [T; M]: Sized
+{
+    type Output = Vector<M, T>;
+
+    #[inline]
+    fn slice(&self, range: [usize; M]) -> Self::Output {
+        let data = Box::new(range.map(|index| self.data[index]));
+
+        Vector { data }
+    }
+}
+
+impl<const N: usize, T: Number, const M: usize> Slice<&mut [usize; M]> for Vector<N, T>
+where [T; N]: Sized, [T; M]: Sized
+{
+    type Output = Vector<M, T>;
+
+    #[inline]
+    fn slice(&self, range: &mut [usize; M]) -> Self::Output {
+        let data = Box::new(range.map(|index| self.data[index]));
+
+        Vector { data }
+    }
+}
+
+// ======== Arithmetic Operations ==============================================
 
 macro_rules! impl_ops {
     (@move_rhs @commutative $trait:ident $trait_assign:ident $op:ident $op_assign:ident $(where $($where:tt)*)?) => {

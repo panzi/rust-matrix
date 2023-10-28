@@ -60,7 +60,7 @@ fn matrix_x_vector() {
 }
 
 #[test]
-fn slice() {
+fn matrix_slice() {
     let m = Matrix::from([
         [ 1.0,  2.0,  3.0,  4.0,  5.0],
         [ 6.0,  7.0,  8.0,  9.0, 10.0],
@@ -70,8 +70,9 @@ fn slice() {
 
     assert_eq!(m.slice((&[0], &[1, 3])), Matrix::from([[6.0], [16.0]]));
     assert_eq!(m.slice((&[0, 2], 1)), Matrix::from([[6.0, 8.0]]));
-    assert_eq!(m.slice((0, &[1])), Matrix::from([[6.0]]));
+    assert_eq!(m.slice(&(0, &[1])), Matrix::from([[6.0]]));
     assert_eq!(m.slice((1, 3)), Matrix::from([[17.0]]));
+    assert_eq!(m.slice(&mut (1, 3)), Matrix::from([[17.0]]));
     assert_eq!(m.slice([(0, 1), (2, 3)]), Vector::from([6.0, 18.0]));
     assert_eq!(
         m.slice([[(1, 3), (2, 3)], [(0, 1), (1, 3)]]),
@@ -94,6 +95,18 @@ fn slice() {
     assert_eq!(m.slice((m.range_x(), 1)), Matrix::from([
         [ 6.0,  7.0,  8.0,  9.0, 10.0],
     ]));
+}
+
+#[test]
+fn vector_slice() {
+    let v = Vector::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+
+    assert_eq!(v.slice(1), Vector::from([2.0]));
+    assert_eq!(v.slice([0, 3]), Vector::from([1.0, 4.0]));
+    assert_eq!(v.slice(&[1, 2, 3]), Vector::from([2.0, 3.0, 4.0]));
+    assert_eq!(v.slice(&mut [1, 2, 3]), Vector::from([2.0, 3.0, 4.0]));
+    assert_eq!(v.slice(v.range()), v.clone());
+    assert_eq!(v.slice(Range::<3, 6>()), Vector::from([4.0, 5.0, 6.0]));
 }
 
 // TODO: many more
