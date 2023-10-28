@@ -36,17 +36,17 @@ where [T; X * Y]: Sized
 
     #[inline]
     pub fn iter_arrays(&self) -> impl std::iter::Iterator<Item = &[T; X]> {
-        unsafe { self.data.as_chunks_unchecked::<X>() }.into_iter()
+        unsafe { self.data.as_chunks_unchecked::<X>() }.iter()
     }
 
     #[inline]
     pub fn iter_arrays_mut(&mut self) -> impl std::iter::Iterator<Item = &mut [T; X]> {
-        unsafe { self.data.as_chunks_unchecked_mut::<X>() }.into_iter()
+        unsafe { self.data.as_chunks_unchecked_mut::<X>() }.iter_mut()
     }
 
     #[inline]
-    pub fn iter_vectors<'a>(&'a self) -> impl std::iter::Iterator<Item = Vector<X, T>> + 'a {
-        unsafe { self.data.as_chunks_unchecked::<X>() }.into_iter().map(Vector::from)
+    pub fn iter_vectors(&self) -> impl std::iter::Iterator<Item = Vector<X, T>> + '_ {
+        unsafe { self.data.as_chunks_unchecked::<X>() }.iter().map(Vector::from)
     }
 
     #[inline]
