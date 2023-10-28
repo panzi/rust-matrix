@@ -8,7 +8,7 @@ use crate::assert::{Assert, IsTrue};
 use crate::bycolumn::{ByColumn, ByColumnMut, IntoByColumn};
 use crate::number::Number;
 use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign, Slice};
-use crate::range::RangeIter;
+use crate::range::{RangeIter, Range};
 
 #[repr(transparent)]
 #[derive(Clone)]
@@ -171,6 +171,21 @@ where [T; X * Y]: Sized
     #[inline]
     pub fn by_column_mut(&mut self) -> ByColumnMut<'_, X, Y, T> {
         ByColumnMut::new(self)
+    }
+
+    #[inline]
+    pub const fn range_x(&self) -> Range::<0, X> {
+        Range::<0, X>()
+    }
+
+    #[inline]
+    pub const fn range_y(&self) -> Range::<0, Y> {
+        Range::<0, Y>()
+    }
+
+    #[inline]
+    pub const fn range_xy(&self) -> (Range::<0, X>, Range::<0, Y>) {
+        (Range::<0, X>(), Range::<0, Y>())
     }
 }
 
@@ -687,8 +702,9 @@ where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
         let x_iter = x_range.iter();
         let mut index = 0;
         for y in y_range.iter() {
+            let yoffset = y * X;
             for x in x_iter.clone() {
-                data[index] = self.data[y * RangeX::LEN + x];
+                data[index] = self.data[yoffset + x];
                 index += 1;
             }
         }

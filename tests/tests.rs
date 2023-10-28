@@ -2,7 +2,7 @@
 #![feature(generic_const_exprs)]
 use std::ops::MulAssign;
 
-use matrix::{*, ops::{Pow, PowAssign}};
+use matrix::{*, ops::{Pow, PowAssign, Slice}, range::Range};
 
 #[test]
 fn pow() {
@@ -57,6 +57,43 @@ fn matrix_x_vector() {
     // ]));
     // println!("{:#?}", m3x2);
     // assert!(false);
+}
+
+#[test]
+fn slice() {
+    let m = Matrix::from([
+        [ 1.0,  2.0,  3.0,  4.0,  5.0],
+        [ 6.0,  7.0,  8.0,  9.0, 10.0],
+        [11.0, 12.0, 13.0, 14.0, 15.0],
+        [16.0, 17.0, 18.0, 19.0, 20.0],
+    ]);
+
+    assert_eq!(m.slice((&[0], &[1, 3])), Matrix::from([[6.0], [16.0]]));
+    assert_eq!(m.slice((&[0, 2], 1)), Matrix::from([[6.0, 8.0]]));
+    assert_eq!(m.slice((0, &[1])), Matrix::from([[6.0]]));
+    assert_eq!(m.slice((1, 3)), Matrix::from([[17.0]]));
+    assert_eq!(m.slice([(0, 1), (2, 3)]), Vector::from([6.0, 18.0]));
+    assert_eq!(
+        m.slice([[(1, 3), (2, 3)], [(0, 1), (1, 3)]]),
+        Matrix::from([[17.0, 18.0], [6.0, 17.0]]));
+
+    assert_eq!(m.slice((&[1, 3], m.range_y())), Matrix::from([
+        [ 2.0,  4.0],
+        [ 7.0,  9.0],
+        [12.0, 14.0],
+        [17.0, 19.0],
+    ]));
+
+    assert_eq!(m.slice((Range::<2, 5>(), Range::<1, 3>())), Matrix::from([
+        [ 8.0,  9.0, 10.0],
+        [13.0, 14.0, 15.0],
+    ]));
+
+    assert_eq!(m.slice(m.range_xy()), m.clone());
+
+    assert_eq!(m.slice((m.range_x(), 1)), Matrix::from([
+        [ 6.0,  7.0,  8.0,  9.0, 10.0],
+    ]));
 }
 
 // TODO: many more

@@ -23,6 +23,16 @@ impl<const START: usize, const END: usize> RangeIter for Range<START, END> {
     }
 }
 
+impl<const START: usize, const END: usize> std::iter::IntoIterator for Range<START, END> {
+    type Item = usize;
+    type IntoIter = std::ops::Range<usize>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
 impl<'a, const LEN: usize> RangeIter for &'a [usize; LEN] {
     const LEN: usize = LEN;
     type Iter = std::iter::Cloned<std::slice::Iter<'a, usize>>;
