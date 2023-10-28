@@ -10,7 +10,7 @@ use crate::number::Number;
 use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign};
 
 #[repr(transparent)]
-#[derive(PartialEq, Clone)]
+#[derive(Clone)]
 pub struct Matrix<const X: usize, const Y: usize, T: Number=f64>
 where [T; X * Y]: Sized
 {
@@ -219,6 +219,50 @@ where [T; X * Y]: Sized
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         unsafe { self.data.as_chunks_unchecked::<X>() }.fmt(f)
+    }
+}
+
+// ======== Equality ===========================================================
+
+impl<const X: usize, const Y: usize, T: Number> PartialEq for Matrix<X, Y, T>
+where T: PartialEq, [T; X * Y]: Sized {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> PartialEq<[[T; X]; Y]> for Matrix<X, Y, T>
+where T: PartialEq, [T; X * Y]: Sized {
+    #[inline]
+    fn eq(&self, other: &[[T; X]; Y]) -> bool {
+        let other: &[T; X * Y] = unsafe { std::mem::transmute(other) };
+        &*self.data == other
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> PartialEq<Matrix<X, Y, T>> for [[T; X]; Y]
+where T: PartialEq, [T; X * Y]: Sized {
+    #[inline]
+    fn eq(&self, other: &Matrix<X, Y, T>) -> bool {
+        let data: &[T; X * Y] = unsafe { std::mem::transmute(self) };
+        data == &*other.data
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> PartialEq<[&[T; X]; Y]> for Matrix<X, Y, T>
+where T: PartialEq, [T; X * Y]: Sized {
+    #[inline]
+    fn eq(&self, other: &[&[T; X]; Y]) -> bool {
+        self.iter_arrays().zip(other.iter()).all(|(a, b)| a == *b)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> PartialEq<Matrix<X, Y, T>> for [&[T; X]; Y]
+where T: PartialEq, [T; X * Y]: Sized {
+    #[inline]
+    fn eq(&self, other: &Matrix<X, Y, T>) -> bool {
+        other == self
     }
 }
 
