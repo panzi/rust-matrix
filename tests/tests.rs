@@ -33,27 +33,23 @@ fn matrix_x_vector() {
         7.0, 8.0, 9.0
     ]);
 
-    println!("{:?}", &m3x2 * &v2);
-    println!("{:?}", m3x2.by_row() * v3.clone());
-
-    assert_eq!(&m3x2 * &v2, [[ 7., 14., 21.], [32., 40., 48.]]);
-    assert_eq!(m3x2.by_row() * &v3, [[ 7., 16., 27.], [28., 40., 54.]]);
-    assert_eq!(m3x2.by_row() * &v3 - 3.0, [[ 4., 13., 24.], [25., 37., 51.]]);
+    assert_eq!(&m3x2 * &v3, [[ 7., 16., 27.], [28., 40., 54.]]);
+    assert_eq!(m3x2.by_column() * &v2, [[ 7., 14., 21.], [32., 40., 48.]]);
+    assert_eq!(m3x2.by_column() * &v2 - 3.0, [[ 4., 11., 18.], [29., 37., 45.]]);
 
     let mut m3x2b = m3x2.clone();
-    m3x2b *= &v2;
+    m3x2b *= &v3;
+
+    assert_eq!(m3x2b, [[ 7., 16., 27.], [28., 40., 54.]]);
+
+    let mut m3x2b = m3x2.clone();
+    m3x2b.by_column_mut().mul_assign(&v2);
 
     assert_eq!(m3x2b, [[ 7., 14., 21.], [32., 40., 48.]]);
 
-    let mut m3x2b = m3x2.clone();
-    m3x2b.by_row_mut().mul_assign(&v3);
+    let m3x2b = m3x2.clone().into_by_column() * &v2;
 
-    assert_eq!(m3x2b, [[ 7., 16., 27.], [28., 40., 54.]]);
-
-    let m3x2b = m3x2.clone().into_by_row() * &v3;
-
-    assert_eq!(m3x2b, [[ 7., 16., 27.], [28., 40., 54.]]);
+    assert_eq!(m3x2b, [[ 7., 14., 21.], [32., 40., 48.]]);
 }
 
 // TODO: many more
-// TODO: make by_row the default and add by_column methods instead (numpy has by_row)
