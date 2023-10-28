@@ -93,14 +93,25 @@ impl<const N: usize, T: Number> Default for Vector<N, T> {
 impl<const N: usize, T: Number> Display for Vector<N, T> {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.data.fmt(f)
+        Display::fmt(&'[', f)?;
+        let mut iter = self.data.iter();
+        if let Some(first) = iter.next() {
+            Debug::fmt(first, f)?;
+            for item in iter {
+                Display::fmt("  ", f)?;
+                Debug::fmt(item, f)?;
+            }
+        }
+        Display::fmt(&']', f)
     }
 }
 
 impl<const N: usize, T: Number> Debug for Vector<N, T> {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.data.fmt(f)
+        Display::fmt("Vector::new(", f)?;
+        self.data.fmt(f)?;
+        Display::fmt(&')', f)
     }
 }
 

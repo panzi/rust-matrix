@@ -209,7 +209,66 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        unsafe { self.data.as_chunks_unchecked::<X>() }.fmt(f)
+        let table = self.data.map(|value| {
+            let cell = format!("{:?}", value);
+            let (prefix, suffix) = get_prefix_suffix(&cell);
+            (cell, prefix, suffix)
+        });
+        let mut widths = [(0usize, 0usize); X];
+
+        fn get_prefix_suffix(cell: &str) -> (usize, usize) {
+            let len = cell.len();
+            let prefix;
+            let suffix;
+            if let Some(index) = cell.find('.') {
+                prefix = index;
+                suffix = len - 1 - index;
+            } else {
+                prefix = len;
+                suffix = 0;
+            }
+
+            (prefix, suffix)
+        }
+
+        for y in 0..Y {
+            let yoffset = y * X;
+            for x in 0..X {
+                let (_, prefix, suffix) = table[yoffset + x];
+
+                if prefix > widths[x].0 {
+                    widths[x].0 = prefix;
+                }
+
+                if suffix > widths[x].1 {
+                    widths[x].1 = suffix;
+                }
+            }
+        }
+
+        Display::fmt("[\n", f)?;
+
+        for y in 0..Y {
+            let yoffset = y * X;
+            Display::fmt("    [", f)?;
+            for x in 0..X {
+                let (col_prefix, col_suffix) = widths[x];
+                let (ref cell, prefix, suffix) = table[yoffset + x];
+
+                for _ in 0..col_prefix - prefix + usize::from(x > 0) * 2 {
+                    Display::fmt(&' ', f)?;
+                }
+
+                Display::fmt(cell, f)?;
+
+                for _ in 0..col_suffix - suffix {
+                    Display::fmt(&' ', f)?;
+                }
+            }
+            Display::fmt("]\n", f)?;
+        }
+
+        Display::fmt(&']', f)
     }
 }
 
@@ -218,7 +277,9 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        unsafe { self.data.as_chunks_unchecked::<X>() }.fmt(f)
+        Display::fmt("Matrix::from(", f)?;
+        unsafe { self.data.as_chunks_unchecked::<X>() }.fmt(f)?;
+        Display::fmt(&')', f)
     }
 }
 

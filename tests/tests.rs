@@ -50,6 +50,13 @@ fn matrix_x_vector() {
     let m3x2b = m3x2.clone().into_by_column() * &v2;
 
     assert_eq!(m3x2b, [[ 7., 14., 21.], [32., 40., 48.]]);
+
+    // println!("{}", Matrix::from([
+    //     [100.0, 2.0,  300.0],
+    //     [  4.0, 5.555,  6.666],
+    // ]));
+    // println!("{:#?}", m3x2);
+    // assert!(false);
 }
 
 // TODO: many more
