@@ -282,16 +282,20 @@ where [T; X * Y]: Sized
 
         let mut max_prefix = 0;
         let mut max_suffix = 0;
+        let mut buf = String::new();
         let table = self.data.map(|value| {
-            let cell = format!("{:?}", value);
-            let (prefix, suffix) = get_prefix_suffix(&cell);
+            use std::fmt::Write;
+            let start = buf.len();
+            let _ = write!(&mut buf, "{:?}", value);
+            let end = buf.len();
+            let (prefix, suffix) = get_prefix_suffix(&buf[start..end]);
             if prefix > max_prefix {
                 max_prefix = prefix;
             }
             if suffix > max_suffix {
                 max_suffix = suffix;
             }
-            (cell, prefix, suffix)
+            (start, end, prefix, suffix)
         });
 
         fn get_prefix_suffix(cell: &str) -> (usize, usize) {
@@ -314,7 +318,7 @@ where [T; X * Y]: Sized
         for y in 0..Y {
             let yoffset = y * X;
             for x in 0..X {
-                let (ref cell, prefix, suffix) = table[yoffset + x];
+                let (start, end, prefix, suffix) = table[yoffset + x];
 
                 if x > 0 {
                     Display::fmt(&", ", f)?;
@@ -324,7 +328,7 @@ where [T; X * Y]: Sized
                     Display::fmt(&' ', f)?;
                 }
 
-                Display::fmt(cell, f)?;
+                Display::fmt(&buf[start..end], f)?;
 
                 for _ in 0..max_suffix - suffix {
                     Display::fmt(&' ', f)?;
