@@ -162,6 +162,7 @@ where [T; X * Y]: Sized
     pub fn into_transpose(mut self) -> Matrix<Y, X, T>
     where [T; Y * X]: Sized, Assert<{ X == Y }>: IsTrue {
         self.transpose_assign();
+        // XXX: the compiler doesn't understand that X == Y
         unsafe { std::mem::transmute(self) }
     }
 
