@@ -159,6 +159,33 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
+    pub fn into_transpose(mut self) -> Matrix<Y, X, T>
+    where [T; Y * X]: Sized, Assert<{ X == Y }>: IsTrue {
+        self.transpose_assign();
+        unsafe { std::mem::transmute(self) }
+    }
+
+// XXX: Wrong and quadratic performance!
+//    #[inline]
+//    pub fn into_transpose(mut self) -> Matrix<Y, X, T>
+//    where [T; Y * X]: Sized {
+//        for y in 1..Y {
+//            let yoffset = y * X;
+//            for x in 0..X {
+//                let dest_index = yoffset + x;
+//                let mut src_index = x * Y + y;
+//                while src_index < dest_index {
+//                    let y2 = src_index / X;
+//                    let x2 = src_index - y2;
+//                    src_index = x2 * Y + y2;
+//                }
+//                self.data.swap(dest_index, src_index);
+//            }
+//        }
+//        unsafe { std::mem::transmute(self) }
+//    }
+
+    #[inline]
     pub fn into_by_column(self) -> IntoByColumn<X, Y, T> {
         IntoByColumn::new(self)
     }
@@ -1678,7 +1705,7 @@ where [Self; X * Y]: Sized
 // ======== Neg ================================================================
 
 impl<const X: usize, const Y: usize, T: Number> Neg for Matrix<X, Y, T>
-where [T; X * Y]: Sized
+where [T; X * Y]: Sized, T: Neg<Output = T>
 {
     type Output = Self;
 
@@ -1692,7 +1719,7 @@ where [T; X * Y]: Sized
 }
 
 impl<const X: usize, const Y: usize, T: Number> Neg for &Matrix<X, Y, T>
-where [T; X * Y]: Sized
+where [T; X * Y]: Sized, T: Neg<Output = T>
 {
     type Output = Matrix<X, Y, T>;
 
@@ -1705,7 +1732,7 @@ where [T; X * Y]: Sized
 }
 
 impl<const X: usize, const Y: usize, T: Number> Neg for &mut Matrix<X, Y, T>
-where [T; X * Y]: Sized
+where [T; X * Y]: Sized, T: Neg<Output = T>
 {
     type Output = Matrix<X, Y, T>;
 

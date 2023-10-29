@@ -1,8 +1,11 @@
+use crate::Vector;
+
 pub trait RangeIter {
     const LEN: usize;
     type Iter: std::iter::Iterator<Item = usize> + Clone;
 
     fn iter(&self) -> Self::Iter;
+    fn to_vector(&self) -> Vector<{ Self::LEN }, usize>;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -20,6 +23,18 @@ impl<const START: usize, const END: usize> RangeIter for Range<START, END> {
     #[inline]
     fn iter(&self) -> Self::Iter {
         START..END
+    }
+
+    #[inline]
+    fn to_vector(&self) -> Vector<{ Self::LEN }, usize> {
+        let mut index = START;
+        let data = Box::new([(); Self::LEN].map(|_| {
+            let value = index;
+            index += 1;
+            value
+        }));
+
+        Vector::from(data)
     }
 }
 
@@ -41,6 +56,13 @@ impl<'a, const LEN: usize> RangeIter for &'a [usize; LEN] {
     fn iter(&self) -> Self::Iter {
         <[usize]>::iter(*self).cloned()
     }
+
+    #[inline]
+    fn to_vector(&self) -> Vector<{ Self::LEN }, usize> {
+        // XXX: Why is this transmute necesarry? Compiler bug? Why doesn't the compiler know that LEN == Self::LEN?
+        let data: &[usize; Self::LEN] = unsafe { std::mem::transmute(*self) };
+        Vector::from(data)
+    }
 }
 
 // not this because it makes an unexpected copy of the array
@@ -61,5 +83,10 @@ impl RangeIter for usize {
     #[inline]
     fn iter(&self) -> Self::Iter {
         [*self].into_iter()
+    }
+
+    #[inline]
+    fn to_vector(&self) -> Vector<{ Self::LEN }, usize> {
+        Vector::from([*self])
     }
 }

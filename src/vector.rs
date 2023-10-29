@@ -254,6 +254,22 @@ impl<const N: usize, T: Number> From<&T> for Vector<N, T> {
     }
 }
 
+impl<const START: usize, const END: usize> From<Range<START, END>> for Vector<{ END - START }, usize> {
+    #[inline]
+    fn from(_value: Range<START, END>) -> Self {
+        let mut index = START;
+        let data = Box::new([(); END - START].map(|_| {
+            let value = index;
+            index += 1;
+            value
+        }));
+
+        Vector::from(data)
+    }
+}
+
+// ======== Index ==============================================================
+
 impl<const N: usize, T: Number> Index<usize> for Vector<N, T> {
     type Output = T;
 
@@ -269,6 +285,8 @@ impl<const N: usize, T: Number> IndexMut<usize> for Vector<N, T> {
         &mut self.data[index]
     }
 }
+
+// ======== Get ================================================================
 
 impl<const N: usize, T: Number> Get<usize> for Vector<N, T> {
     type Output = T;
@@ -623,7 +641,7 @@ where [Self; N]: Sized
 // ======== Neg ================================================================
 
 impl<const N: usize, T: Number> Neg for Vector<N, T>
-where [T; N]: Sized
+where [T; N]: Sized, T: Neg<Output = T>
 {
     type Output = Self;
 
@@ -637,7 +655,7 @@ where [T; N]: Sized
 }
 
 impl<const N: usize, T: Number> Neg for &Vector<N, T>
-where [T; N]: Sized
+where [T; N]: Sized, T: Neg<Output = T>
 {
     type Output = Vector<N, T>;
 
@@ -650,7 +668,7 @@ where [T; N]: Sized
 }
 
 impl<const N: usize, T: Number> Neg for &mut Vector<N, T>
-where [T; N]: Sized
+where [T; N]: Sized, T: Neg<Output = T>
 {
     type Output = Vector<N, T>;
 

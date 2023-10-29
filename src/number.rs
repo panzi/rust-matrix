@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Neg, Sub, Div, AddAssign, MulAssign, SubAssign, DivAssign};
+use std::ops::{Add, Mul, Sub, Div, AddAssign, MulAssign, SubAssign, DivAssign};
 use std::fmt::{Display, Debug};
 
 use crate::ops::{Pow, PowAssign};
@@ -9,7 +9,6 @@ pub trait Number:
     Sub<Output = Self> +
     Mul<Output = Self> +
     Div<Output = Self> +
-    Neg<Output = Self> +
     AddAssign + SubAssign + MulAssign + DivAssign +
     Display + Debug +
     PartialEq + PartialOrd +
@@ -45,6 +44,36 @@ impl Number for i128 {
 }
 
 impl Number for isize {
+    const ZERO: Self = 0;
+    const ONE: Self = 1;
+}
+
+impl Number for u8 {
+    const ZERO: Self = 0;
+    const ONE: Self = 1;
+}
+
+impl Number for u16 {
+    const ZERO: Self = 0;
+    const ONE: Self = 1;
+}
+
+impl Number for u32 {
+    const ZERO: Self = 0;
+    const ONE: Self = 1;
+}
+
+impl Number for u64 {
+    const ZERO: Self = 0;
+    const ONE: Self = 1;
+}
+
+impl Number for u128 {
+    const ZERO: Self = 0;
+    const ONE: Self = 1;
+}
+
+impl Number for usize {
     const ZERO: Self = 0;
     const ONE: Self = 1;
 }

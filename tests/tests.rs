@@ -2,7 +2,7 @@
 #![feature(generic_const_exprs)]
 use std::ops::MulAssign;
 
-use matrix::{*, ops::{Pow, PowAssign, Slice, Unit}, range::Range};
+use matrix::{*, ops::{Pow, PowAssign, Slice, Unit}, range::{Range, RangeIter}};
 
 #[test]
 fn unit() {
@@ -47,24 +47,77 @@ fn transpose() {
     ]);
 
     let mut m = Matrix::from([
-        [1, 0, 2],
-        [0, 1, 3],
-        [4, 0, 1],
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
     ]);
 
     assert_eq!(m.transpose(), [
-        [1, 0, 4],
-        [0, 1, 0],
-        [2, 3, 1],
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9],
     ]);
 
     m.transpose_assign();
 
     assert_eq!(m, [
-        [1, 0, 4],
-        [0, 1, 0],
-        [2, 3, 1],
+        [1, 4, 7],
+        [2, 5, 8],
+        [3, 6, 9],
     ]);
+
+    let m = Matrix::from([[0usize; 0]; 0]);
+//    assert_eq!(m.clone().into_transpose(), m.transpose());
+    let mut m2 = m.clone();
+    m2.transpose_assign();
+    assert_eq!(m2, m.transpose());
+
+    let m = Matrix::from([[0usize]]);
+    let mut m2 = m.clone();
+    m2.transpose_assign();
+//    assert_eq!(m.clone().into_transpose(), m.transpose());
+    assert_eq!(m2, m.transpose());
+
+    macro_rules! test_transpose {
+        () => {};
+
+        (@opt $x:literal) => {};
+        (@opt $x:literal sym) => {
+            let m: Matrix<$x, $x, usize> = Matrix::from(Range::<0, { $x * $x }>().to_vector());
+            let mut m2 = m.clone();
+            m2.transpose_assign();
+//            println!("transpose_assign {} x {}", $x, $x);
+            assert_eq!(m2, m.transpose());
+            assert_eq!(m.clone().into_transpose(), m.transpose());
+        };
+
+        (($x:literal $y:literal $($opt:ident)?) $($tail:tt)*) => {
+//            let v = Range::<0, { $x * $y }>().to_vector();
+//            let m: Matrix<$x, $y, usize> = Matrix::from(v);
+            test_transpose!(@opt $x $($opt)?);
+
+//            println!("into_transpose {} x {}", $x, $y);
+//            assert_eq!(m.clone().into_transpose(), m.transpose());
+            test_transpose!($($tail)*);
+        };
+    }
+
+    test_transpose!(
+        (1 2) (2 1)
+        (1 3) (3 1)
+        (1 4) (4 1)
+        (1 5) (5 1)
+        (2 2 sym)
+        (2 3) (3 2)
+        (2 4) (4 2)
+        (2 5) (5 2)
+        (3 3 sym)
+        (3 4) (4 3)
+        (3 5) (5 3)
+        (4 4 sym)
+        (4 5) (5 4)
+        (5 5 sym)
+    );
 
     /*
     into_transpose()?
@@ -78,6 +131,64 @@ fn transpose() {
         [1, 4],
         [2, 5],
     ] == [0, 3, 1, 4, 2, 5]
+
+    ----
+
+    [
+        [0, 1,  2,  3],
+        [4, 5,  6,  7],
+        [8, 9, 10, 11],
+    ] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+    [
+        [0, 4,  8],
+        [1, 5,  9],
+        [2, 6, 10],
+        [3, 7, 11],
+    ] == [0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11]
+
+    [0, 1, 2, 3, 4, 5, 6, 7,  8, 9, 10, 11] original
+    [0, 4, 8, 1, 5, 9, 2, 6, 10, 3,  7, 11] transposed
+
+    [0, 1, 2, 3, 4, 5, 6, 7,  8, 9, 10, 11]
+     ^
+    [0, 4, 2, 3, 1, 5, 6, 7,  8, 9, 10, 11]
+        ^        ^
+    [0, 4, 8, 3, 1, 5, 6, 7,  2, 9, 10, 11]
+           ^                  ^
+    [0, 4, 8, 1, 3, 5, 6, 7,  2, 9, 10, 11]
+              ^  ^
+    [0, 4, 8, 1, 5, 3, 6, 7,  2, 9, 10, 11]
+                 ^  ^
+    [0, 4, 8, 1, 5, 9, 6, 7,  2, 3, 10, 11]
+                    ^            ^
+    [0, 4, 8, 1, 5, 9, 2, 7,  6, 3, 10, 11]
+                       ^      ^
+    [0, 4, 8, 1, 5, 9, 2, 6,  7, 3, 10, 11]
+                          ^   ^
+    [0, 4, 8, 1, 5, 9, 2, 6, 10, 3,  7, 11]
+                              ^      ^
+    [0, 4, 8, 1, 5, 9, 2, 6, 10, 3,  7, 11]
+                                 ^
+    [0, 4, 8, 1, 5, 9, 2, 6, 10, 3,  7, 11]
+                                     ^
+    [0, 4, 8, 1, 5, 9, 2, 6, 10, 3,  7, 11]
+                                        ^
+
+    [>0,  1,  2]  [ 0,> 4,  2]  [ 0,  4,> 8]  [ 0,  4,  8]
+    [ 3,  4,  5]  [ 3,> 1,  5]  [ 3,  1,  5]  [>1,> 3,  5]
+    [ 6,  7,  8]  [ 6,  7,  8]  [ 6,  7,> 2]  [ 6,  7,  2]
+    [ 9, 10, 11]  [ 9, 10, 11]  [ 9, 10, 11]  [ 9, 10, 11]
+    
+    [ 0,  4,  8]  [ 0,  4,  8]  [ 0,  4,  8]  [ 0,  4,  8]
+    [ 1, >5,> 3]  [ 1,  5,> 9]  [ 1,  5,  9]  [ 1,  5,  9]
+    [ 6,  7,  2]  [ 6,  7,  2]  [>2,  7,> 6]  [ 2,> 6,> 7]
+    [ 9, 10, 11]  [>3, 10, 11]  [ 3, 10, 11]  [ 3, 10, 11]
+
+    [ 0,  4,  8]  [ 0,  4,  8]  [ 0,  4,  8]  [ 0,  4,  8]
+    [ 1,  5,  9]  [ 1,  5,  9]  [ 1,  5,  9]  [ 1,  5,  9]
+    [ 2,  6,>10]  [ 2,  6, 10]  [ 2,  6, 10]  [ 2,  6, 10]
+    [ 3,> 7, 11]  [>3,  7, 11]  [ 3,> 7, 11]  [ 3,  7,>11]
     */
 }
 
