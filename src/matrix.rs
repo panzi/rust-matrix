@@ -471,7 +471,7 @@ where [T; X * Y]: Sized
     #[inline]
     fn from(value: &[&[T; X]; Y]) -> Self {
         // TODO: optimize using MaybeUninit?
-        let mut data = Box::new([Default::default(); X * Y]);
+        let mut data = Box::new([T::default(); X * Y]);
         for y in 0..Y {
             data[y * X..(y + 1) * X].copy_from_slice(value[y]);
         }
@@ -494,7 +494,7 @@ where [T; X * Y]: Sized
     #[inline]
     fn from(value: &[Vector<X, T>; Y]) -> Self {
         // TODO: optimize using MaybeUninit?
-        let mut data = Box::new([Default::default(); X * Y]);
+        let mut data = Box::new([T::default(); X * Y]);
         for y in 0..Y {
             data[y * X..(y + 1) * X].copy_from_slice(value[y].data());
         }
@@ -517,7 +517,7 @@ where [T; X * Y]: Sized
     #[inline]
     fn from(value: &[&Vector<X, T>; Y]) -> Self {
         // TODO: optimize using MaybeUninit?
-        let mut data = Box::new([Default::default(); X * Y]);
+        let mut data = Box::new([T::default(); X * Y]);
         for y in 0..Y {
             data[y * X..(y + 1) * X].copy_from_slice(value[y].data());
         }

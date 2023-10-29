@@ -329,4 +329,21 @@ fn vector_slice() {
     assert_eq!(v.slice(Range::<3, 6>()), Vector::from([4.0, 5.0, 6.0]));
 }
 
+#[test]
+fn format() {
+    let m = Matrix::from([
+        [  0.0,   1.0  ,  -2.0  ],
+        [333.0,   4.444,   5.555],
+        [  0.6, 777.0  ,   8.0  ],
+    ]);
+
+    let s = format!("{}", m);
+    assert_eq!(s, "\
+[
+    [  0.0    1.0    -2.0  ]
+    [333.0    4.444   5.555]
+    [  0.6  777.0     8.0  ]
+]");
+}
+
 // TODO: many more
