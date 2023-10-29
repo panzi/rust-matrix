@@ -9,7 +9,7 @@ use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Slice};
 use crate::range::{RangeIter, Range};
 
 #[repr(transparent)]
-#[derive(PartialEq, Clone)]
+#[derive(Clone)]
 pub struct Vector<const N: usize, T: Number=f64> {
     data: Box<[T; N]>
 }
@@ -67,10 +67,6 @@ impl<const N: usize, T: Number> Vector<N, T> {
         Range::<0, N>()
     }
 }
-
-impl<const N: usize, T: Number> Eq
-for Vector<N, T>
-where T: Eq {}
 
 impl<const N: usize, T: Number> IntoIterator for Vector<N, T> {
     type Item = T;
@@ -138,6 +134,54 @@ impl<const N: usize, T: Number> Debug for Vector<N, T> {
         Display::fmt(&')', f)
     }
 }
+
+// ======== Equality ===========================================================
+
+impl<const N: usize, T: Number> PartialEq for Vector<N, T>
+where T: PartialEq, [T; N]: Sized {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.data == other.data
+    }
+}
+
+impl<const N: usize, T: Number> PartialEq<[T; N]> for Vector<N, T>
+where T: PartialEq, [T; N]: Sized {
+    #[inline]
+    fn eq(&self, other: &[T; N]) -> bool {
+        &*self.data == other
+    }
+}
+
+impl<const N: usize, T: Number> PartialEq<&[T; N]> for Vector<N, T>
+where T: PartialEq, [T; N]: Sized {
+    #[inline]
+    fn eq(&self, other: &&[T; N]) -> bool {
+        &*self.data == *other
+    }
+}
+
+impl<const N: usize, T: Number> PartialEq<Vector<N, T>> for &[T; N]
+where T: PartialEq, [T; N]: Sized {
+    #[inline]
+    fn eq(&self, other: &Vector<N, T>) -> bool {
+        *self == &*other.data
+    }
+}
+
+impl<const N: usize, T: Number> PartialEq<Vector<N, T>> for [T; N]
+where T: PartialEq, [T; N]: Sized {
+    #[inline]
+    fn eq(&self, other: &Vector<N, T>) -> bool {
+        self == &*other.data
+    }
+}
+
+impl<const N: usize, T: Number> Eq
+for Vector<N, T>
+where T: Eq {}
+
+// ======== From ===============================================================
 
 impl<const N: usize, T: Number> From<[T; N]> for Vector<N, T> {
     #[inline]

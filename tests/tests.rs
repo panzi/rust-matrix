@@ -2,7 +2,59 @@
 #![feature(generic_const_exprs)]
 use std::ops::MulAssign;
 
-use matrix::{*, ops::{Pow, PowAssign, Slice}, range::Range};
+use matrix::{*, ops::{Pow, PowAssign, Slice, Unit}, range::Range};
+
+#[test]
+fn unit() {
+    let m = Matrix::unit();
+
+    assert_eq!(&m, &[
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+    ]);
+
+    assert_eq!(m, [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+    ]);
+
+    assert_eq!(m, &[
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0],
+    ]);
+
+    let v = Vector::unit();
+
+    assert_eq!(&v, &[1.0, 1.0, 1.0]);
+    assert_eq!(v,   [1.0, 1.0, 1.0]);
+    assert_eq!(v,  &[1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn transpose() {
+    let mut m = Matrix::from([
+        [1, 0, 2],
+        [0, 1, 3],
+        [4, 0, 1],
+    ]);
+
+    assert_eq!(m.transpose(), &[
+        [1, 0, 4],
+        [0, 1, 0],
+        [2, 3, 1],
+    ]);
+
+    m.transpose_assign();
+
+    assert_eq!(&m, &[
+        [1, 0, 4],
+        [0, 1, 0],
+        [2, 3, 1],
+    ]);
+}
 
 #[test]
 fn pow() {
@@ -34,6 +86,11 @@ fn matrix_x_vector() {
     ]);
 
     assert_eq!(&m3x2 * &v3, [[ 7., 16., 27.], [28., 40., 54.]]);
+    assert_eq!(m3x2.transpose() * &v2, [
+        [ 7., 32.],
+        [14., 40.],
+        [21., 48.],
+    ]);
     assert_eq!(m3x2.by_column() * &v2, [[ 7., 14., 21.], [32., 40., 48.]]);
     assert_eq!(m3x2.by_column() * &v2 - 3.0, [[ 4., 11., 18.], [29., 37., 45.]]);
 

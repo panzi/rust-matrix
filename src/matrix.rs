@@ -238,7 +238,7 @@ where [T; X * Y]: Sized
     #[inline]
     fn default() -> Self {
         Self {
-            data: Box::new([Default::default(); X * Y])
+            data: Box::new([T::default(); X * Y])
         }
     }
 }
@@ -338,6 +338,24 @@ where T: PartialEq, [T; X * Y]: Sized {
     fn eq(&self, other: &[[T; X]; Y]) -> bool {
         let other: &[T; X * Y] = unsafe { std::mem::transmute(other) };
         &*self.data == other
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> PartialEq<&[[T; X]; Y]> for Matrix<X, Y, T>
+where T: PartialEq, [T; X * Y]: Sized {
+    #[inline]
+    fn eq(&self, other: &&[[T; X]; Y]) -> bool {
+        let other: &[T; X * Y] = unsafe { std::mem::transmute(*other) };
+        &*self.data == other
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> PartialEq<Matrix<X, Y, T>> for &[[T; X]; Y]
+where T: PartialEq, [T; X * Y]: Sized {
+    #[inline]
+    fn eq(&self, other: &Matrix<X, Y, T>) -> bool {
+        let data: &[T; X * Y] = unsafe { std::mem::transmute(self) };
+        data == &*other.data
     }
 }
 
