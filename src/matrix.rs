@@ -276,12 +276,23 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if X * Y == 0 {
+            return write!(f, "Matrix::from([[{:?}; 0]; 0])", T::default());
+        }
+
+        let mut max_prefix = 0;
+        let mut max_suffix = 0;
         let table = self.data.map(|value| {
             let cell = format!("{:?}", value);
             let (prefix, suffix) = get_prefix_suffix(&cell);
+            if prefix > max_prefix {
+                max_prefix = prefix;
+            }
+            if suffix > max_suffix {
+                max_suffix = suffix;
+            }
             (cell, prefix, suffix)
         });
-        let mut widths = [(0usize, 0usize); X];
 
         fn get_prefix_suffix(cell: &str) -> (usize, usize) {
             let len = cell.len();
@@ -298,44 +309,35 @@ where [T; X * Y]: Sized
             (prefix, suffix)
         }
 
-        for y in 0..Y {
-            let yoffset = y * X;
-            for x in 0..X {
-                let (_, prefix, suffix) = table[yoffset + x];
-
-                if prefix > widths[x].0 {
-                    widths[x].0 = prefix;
-                }
-
-                if suffix > widths[x].1 {
-                    widths[x].1 = suffix;
-                }
-            }
-        }
-
-        Display::fmt("[\n", f)?;
+        Display::fmt("Matrix::from([[", f)?;
 
         for y in 0..Y {
             let yoffset = y * X;
-            Display::fmt("    [", f)?;
             for x in 0..X {
-                let (col_prefix, col_suffix) = widths[x];
                 let (ref cell, prefix, suffix) = table[yoffset + x];
 
-                for _ in 0..col_prefix - prefix + usize::from(x > 0) * 2 {
+                if x > 0 {
+                    Display::fmt(&", ", f)?;
+                }
+
+                for _ in 0..max_prefix - prefix {
                     Display::fmt(&' ', f)?;
                 }
 
                 Display::fmt(cell, f)?;
 
-                for _ in 0..col_suffix - suffix {
+                for _ in 0..max_suffix - suffix {
                     Display::fmt(&' ', f)?;
                 }
             }
-            Display::fmt("]\n", f)?;
+            if y + 1 < Y {
+                Display::fmt("],\n              [", f)?;
+            } else {
+                Display::fmt("]])", f)?;
+            }
         }
 
-        Display::fmt(&']', f)
+        Ok(())
     }
 }
 
@@ -344,6 +346,9 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if X * Y == 0 {
+            return write!(f, "Matrix::from([[{:?}; 0]; 0])", T::default());
+        }
         Display::fmt("Matrix::from(", f)?;
         unsafe { self.data.as_chunks_unchecked::<X>() }.fmt(f)?;
         Display::fmt(&')', f)

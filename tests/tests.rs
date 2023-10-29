@@ -338,11 +338,12 @@ fn format() {
     ]);
 
     assert_eq!(format!("{}", m), "\
-[
-    [  0.0    1.0    -2.0  ]
-    [333.0    4.444   5.555]
-    [  0.6  777.0     8.0  ]
-]");
+Matrix::from([[  0.0  ,   1.0  ,  -2.0  ],
+              [333.0  ,   4.444,   5.555],
+              [  0.6  , 777.0  ,   8.0  ]])");
+
+    assert_eq!(format!("{}", Matrix::from([[0; 0]; 0])), "Matrix::from([[0; 0]; 0])");
+    assert_eq!(format!("{}", Matrix::from([[0]])), "Matrix::from([[0]])");
 
     assert_eq!(format!("{:#?}", m), "\
 Matrix::from([
