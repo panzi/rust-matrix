@@ -35,13 +35,24 @@ fn unit() {
 
 #[test]
 fn transpose() {
+    let m = Matrix::from([
+        [1, 2, 3],
+        [4, 5, 6],
+    ]);
+
+    assert_eq!(m.transpose(), [
+        [1, 4],
+        [2, 5],
+        [3, 6],
+    ]);
+
     let mut m = Matrix::from([
         [1, 0, 2],
         [0, 1, 3],
         [4, 0, 1],
     ]);
 
-    assert_eq!(m.transpose(), &[
+    assert_eq!(m.transpose(), [
         [1, 0, 4],
         [0, 1, 0],
         [2, 3, 1],
@@ -49,10 +60,51 @@ fn transpose() {
 
     m.transpose_assign();
 
-    assert_eq!(&m, &[
+    assert_eq!(m, [
         [1, 0, 4],
         [0, 1, 0],
         [2, 3, 1],
+    ]);
+
+    /*
+    into_transpose()?
+    [
+        [0, 1, 2],
+        [3, 4, 5],
+    ] == [0, 1, 2, 3, 4, 5]
+    
+    [
+        [0, 3],
+        [1, 4],
+        [2, 5],
+    ] == [0, 3, 1, 4, 2, 5]
+    */
+}
+
+#[test]
+fn reshape() {
+    let m = Matrix::from([
+        [1.0, 2.0, 3.0],
+        [4.0, 5.0, 6.0],
+    ]);
+
+    assert_eq!(m.reshape(), [
+        [1.0, 2.0],
+        [3.0, 4.0],
+        [5.0, 6.0],
+    ]);
+
+    assert_eq!(m.reshape(), [
+        [1.0],
+        [2.0],
+        [3.0],
+        [4.0],
+        [5.0],
+        [6.0],
+    ]);
+
+    assert_eq!(m.into_reshape(), [
+        [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
     ]);
 }
 
