@@ -1,27 +1,17 @@
-use crate::{Matrix, Number, Vector, FromUSize, iter::ColumnIter};
+use std::ops::{Index, IndexMut};
+
+use crate::{Matrix, Number, Vector, iter::ColumnIter, ops::{MatrixAggregate, Get, GetMut}};
+
+// TODO: impl Slice
+
+// ======== IntoByColumn =======================================================
 
 #[repr(transparent)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct IntoByColumn<const X: usize, const Y: usize, T: Number=f64>
 where [T; X * Y]: Sized
 {
     pub matrix: Matrix<X, Y, T>
-}
-
-#[repr(transparent)]
-#[derive(Debug, Clone)]
-pub struct ByColumn<'a, const X: usize, const Y: usize, T: Number=f64>
-where [T; X * Y]: Sized
-{
-    pub matrix: &'a Matrix<X, Y, T>
-}
-
-#[repr(transparent)]
-#[derive(Debug)]
-pub struct ByColumnMut<'a, const X: usize, const Y: usize, T: Number=f64>
-where [T; X * Y]: Sized
-{
-    pub matrix: &'a mut Matrix<X, Y, T>
 }
 
 impl<const X: usize, const Y: usize, T: Number> IntoByColumn<X, Y, T>
@@ -31,15 +21,87 @@ where [T; X * Y]: Sized {
         Self { matrix }
     }
 
+    #[inline]
     pub fn iter_vectors(&self) -> ColumnIter<'_, X, Y, T> {
         self.matrix.columns()
     }
 
     #[inline]
-    pub fn map<F, U>(self, f: F) -> Matrix<Y, X, U>
+    pub fn map<F, U>(&self, f: F) -> Matrix<Y, X, U>
     where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
         self.matrix.transpose_map(f)
     }
+
+    #[inline]
+    pub fn to_matrix(&self) -> Matrix<Y, X, T>
+    where [T; Y * X]: Sized {
+        self.matrix.transpose()
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> MatrixAggregate<Y, X, T> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized {
+    #[inline]
+    fn fold<F, B>(&self, init: B, f: F) -> Vector<X, B>
+    where F: FnMut(B, T) -> B, B: Number {
+        fold_by_column(&self.matrix, init, f)
+    }
+
+    #[inline]
+    fn mean(&self) -> Vector<X, T>
+    where T: Ord, [T; X * Y]: Sized {
+        mean_by_column(&self.matrix)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> Get<(usize, usize)> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized
+{
+    type Output = T;
+
+    #[inline]
+    fn get(&self, (x, y): (usize, usize)) -> Option<&Self::Output> {
+        self.matrix.get(y, x)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> GetMut<(usize, usize)> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized
+{
+    #[inline]
+    fn get_mut(&mut self, (x, y): (usize, usize)) -> Option<&mut Self::Output> {
+        self.matrix.get_mut(y, x)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> Index<(usize, usize)> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized
+{
+    type Output = T;
+
+    #[inline]
+    fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
+        self.matrix.index(y, x)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number> IndexMut<(usize, usize)> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized
+{
+    #[inline]
+    fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
+        self.matrix.index_mut(y, x)
+    }
+}
+
+// ======== ByColumn ===========================================================
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ByColumn<'a, const X: usize, const Y: usize, T: Number=f64>
+where [T; X * Y]: Sized
+{
+    pub matrix: &'a Matrix<X, Y, T>
 }
 
 impl<'a, const X: usize, const Y: usize, T: Number> ByColumn<'a, X, Y, T>
@@ -60,40 +122,58 @@ where [T; X * Y]: Sized {
     }
 
     #[inline]
-    pub fn fold<F, B>(&self, init: B, mut f: F) -> Vector<X, B>
-    where F: FnMut(B, T) -> B, B: Number {
-        let mtx = self.matrix.data();
-        let mut data = Box::new([init; X]);
-
-        for y in 0..Y {
-            let yoffset = y * X;
-            for (value, res) in mtx[yoffset..yoffset + X].iter().zip(data.iter_mut()) {
-                *res = f(*res, *value);
-            }
-        }
-
-        Vector::from(data)
-    }
-
-    #[inline]
-    pub fn sum(&self) -> Vector<X, T> {
-        self.fold(T::default(), |acc, value| acc + value)
-    }
-
-    #[inline]
-    pub fn avg(&self) -> Vector<X, T>
-    where T: FromUSize {
-        self.sum() / T::from_usize(Y)
-    }
-
-    #[inline]
-    pub fn mean(&self) -> Vector<X, T>
-    where T: Ord, [T; Y * X]: Sized {
-        self.matrix.transpose().mean()
+    pub fn to_matrix(&self) -> Matrix<Y, X, T>
+    where [T; Y * X]: Sized {
+        self.matrix.transpose()
     }
 }
 
-// TODO: impl Slice
+impl<'a, const X: usize, const Y: usize, T: Number> MatrixAggregate<Y, X, T> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized {
+    #[inline]
+    fn fold<F, B>(&self, init: B, f: F) -> Vector<X, B>
+    where F: FnMut(B, T) -> B, B: Number {
+        fold_by_column(self.matrix, init, f)
+    }
+
+    #[inline]
+    fn mean(&self) -> Vector<X, T>
+    where T: Ord, [T; X * Y]: Sized {
+        mean_by_column(self.matrix)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number> Get<(usize, usize)> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized
+{
+    type Output = T;
+
+    #[inline]
+    fn get(&self, (x, y): (usize, usize)) -> Option<&Self::Output> {
+        self.matrix.get(y, x)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number> Index<(usize, usize)> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized
+{
+    type Output = T;
+
+    #[inline]
+    fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
+        self.matrix.index(y, x)
+    }
+}
+
+// ======== ByColumnMut ========================================================
+
+#[repr(transparent)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct ByColumnMut<'a, const X: usize, const Y: usize, T: Number=f64>
+where [T; X * Y]: Sized
+{
+    pub matrix: &'a mut Matrix<X, Y, T>
+}
 
 impl<'a, const X: usize, const Y: usize, T: Number> ByColumnMut<'a, X, Y, T>
 where [T; X * Y]: Sized {
@@ -111,4 +191,101 @@ where [T; X * Y]: Sized {
     where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
         self.matrix.transpose_map(f)
     }
+
+    #[inline]
+    pub fn to_matrix(&self) -> Matrix<Y, X, T>
+    where [T; Y * X]: Sized {
+        self.matrix.transpose()
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number> MatrixAggregate<Y, X, T> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized {
+    #[inline]
+    fn fold<F, B>(&self, init: B, f: F) -> Vector<X, B>
+    where F: FnMut(B, T) -> B, B: Number {
+        fold_by_column(self.matrix, init, f)
+    }
+
+    #[inline]
+    fn mean(&self) -> Vector<X, T>
+    where T: Ord, [T; X * Y]: Sized {
+        mean_by_column(self.matrix)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number> Get<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized
+{
+    type Output = T;
+
+    #[inline]
+    fn get(&self, (x, y): (usize, usize)) -> Option<&Self::Output> {
+        self.matrix.get(y, x)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number> GetMut<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized
+{
+    #[inline]
+    fn get_mut(&mut self, (x, y): (usize, usize)) -> Option<&mut Self::Output> {
+        self.matrix.get_mut(y, x)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number> Index<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized
+{
+    type Output = T;
+
+    #[inline]
+    fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
+        self.matrix.index(y, x)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number> IndexMut<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized
+{
+    #[inline]
+    fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
+        self.matrix.index_mut(y, x)
+    }
+}
+
+// ======== Helper Functions ===================================================
+
+#[inline]
+pub fn mean_by_column<const X: usize, const Y: usize, T: Number>(matrix: &Matrix<X, Y, T>) -> Vector<X, T>
+where [T; X * Y]: Sized, T: Ord {
+    let mut iter = matrix.columns();
+    let data = Box::new([(); X].map(|_| {
+        let mut vector = iter.next().unwrap();
+        vector.sort();
+        if Y & 1 != 0 {
+            vector[Y / 2]
+        } else {
+            let index = Y / 2;
+            (vector[index - 1] + vector[index]) / (T::ONE + T::ONE)
+        }
+    }));
+
+    Vector::from(data)
+}
+
+#[inline]
+pub fn fold_by_column<F, B, const X: usize, const Y: usize, T: Number>(matrix: &Matrix<X, Y, T>, init: B, mut f: F) -> Vector<X, B>
+where F: FnMut(B, T) -> B, B: Number, [T; X * Y]: Sized {
+    let mtx = matrix.data();
+    let mut data = Box::new([init; X]);
+
+    for y in 0..Y {
+        let yoffset = y * X;
+        for (value, res) in mtx[yoffset..yoffset + X].iter().zip(data.iter_mut()) {
+            *res = f(*res, *value);
+        }
+    }
+
+    Vector::from(data)
 }

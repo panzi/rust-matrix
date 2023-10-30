@@ -8,7 +8,7 @@ use crate::{Vector, FromUSize};
 use crate::assert::{Assert, IsTrue};
 use crate::bycolumn::{ByColumn, ByColumnMut, IntoByColumn};
 use crate::number::Number;
-use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign, Slice, Tap, Pipe};
+use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign, Slice, Tap, Pipe, MatrixAggregate};
 use crate::range::{RangeIter, Range};
 
 #[repr(transparent)]
@@ -107,12 +107,12 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
-    fn index(&self, x: usize, y: usize) -> &T {
+    pub fn index(&self, x: usize, y: usize) -> &T {
         &self.data[X * y + x]
     }
 
     #[inline]
-    fn index_mut(&mut self, x: usize, y: usize) -> &mut T {
+    pub fn index_mut(&mut self, x: usize, y: usize) -> &mut T {
         &mut self.data[X * y + x]
     }
 
@@ -173,19 +173,6 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
-    pub fn fold<F, B>(&self, init: B, mut f: F) -> Vector<Y, B>
-    where F: FnMut(B, T) -> B, B: Number {
-        let mut yoffset = 0;
-        let data = Box::new([(); Y].map(|_| {
-            let value = self.data[yoffset..yoffset + X].iter().cloned().fold(init, &mut f);
-            yoffset += X;
-            value
-        }));
-
-        Vector::from(data)
-    }
-
-    #[inline]
     pub fn fold_row<F, B>(&self, y: usize, init: B, f: F) -> B
     where F: FnMut(B, T) -> B, B: Number {
         let yoffset = y * X;
@@ -206,44 +193,14 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
-    pub fn sum(&self) -> Vector<Y, T> {
-        self.fold(T::default(), |acc, value| acc + value)
-    }
-
-    #[inline]
     pub fn sum_column(&self, x: usize) -> T {
         self.fold_column(x, T::default(), |acc, value| acc + value)
-    }
-
-    #[inline]
-    pub fn avg(&self) -> Vector<Y, T>
-    where T: FromUSize {
-        self.sum() / T::from_usize(X)
     }
 
     #[inline]
     pub fn avg_column(&self, x: usize) -> T
     where T: FromUSize {
         self.sum_column(x) / T::from_usize(Y)
-    }
-
-    #[inline]
-    pub fn mean(&self) -> Vector<Y, T>
-    where T: Ord {
-        let mut yoffset = 0;
-        let data = Box::new([(); Y].map(|_| {
-            let mut data = self.data[yoffset..yoffset + X].to_vec();
-            data.sort();
-            yoffset += X;
-            if X & 1 != 0 {
-                data[X / 2]
-            } else {
-                let index = X / 2;
-                (data[index - 1] + data[index]) / (T::ONE + T::ONE)
-            }
-        }));
-
-        Vector::from(data)
     }
 
     #[inline]
@@ -375,6 +332,42 @@ where [T; X * Y]: Sized {}
 
 impl<const X: usize, const Y: usize, T: Number> Pipe for Matrix<X, Y, T>
 where [T; X * Y]: Sized {}
+
+impl<const X: usize, const Y: usize, T: Number> MatrixAggregate<X, Y, T> for Matrix<X, Y, T>
+where [T; X * Y]: Sized {
+    #[inline]
+    fn fold<F, B>(&self, init: B, mut f: F) -> Vector<Y, B>
+    where F: FnMut(B, T) -> B, B: Number {
+        let mut yoffset = 0;
+        let data = Box::new([(); Y].map(|_| {
+            let value = self.data[yoffset..yoffset + X].iter().cloned().fold(init, &mut f);
+            yoffset += X;
+            value
+        }));
+
+        Vector::from(data)
+    }
+
+
+    #[inline]
+    fn mean(&self) -> Vector<Y, T>
+    where T: Ord {
+        let mut yoffset = 0;
+        let data = Box::new([(); Y].map(|_| {
+            let mut data = self.data[yoffset..yoffset + X].to_vec();
+            data.sort();
+            yoffset += X;
+            if X & 1 != 0 {
+                data[X / 2]
+            } else {
+                let index = X / 2;
+                (data[index - 1] + data[index]) / (T::ONE + T::ONE)
+            }
+        }));
+
+        Vector::from(data)
+    }
+}
 
 impl<const X: usize, const Y: usize, T: Number> IntoIterator for Matrix<X, Y, T>
 where [T; X * Y]: Sized {

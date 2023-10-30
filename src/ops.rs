@@ -1,3 +1,5 @@
+use crate::{Number, Vector, FromUSize};
+
 pub trait Unit {
     fn unit() -> Self;
 }
@@ -100,4 +102,28 @@ pub trait Pipe {
     where F: FnOnce(Self) -> T, Self: Sized {
         f(self)
     }
+}
+
+pub trait MatrixAggregate<const X: usize, const Y: usize, T: Number> {
+    fn fold<F, B>(&self, init: B, f: F) -> Vector<Y, B>
+    where F: FnMut(B, T) -> B, B: Number;
+
+    #[inline]
+    fn sum(&self) -> Vector<Y, T> {
+        self.fold(T::default(), |acc, value| acc + value)
+    }
+
+    #[inline]
+    fn product(&self) -> Vector<Y, T> {
+        self.fold(T::ONE, |acc, value| acc * value)
+    }
+
+    #[inline]
+    fn avg(&self) -> Vector<Y, T>
+    where T: FromUSize {
+        self.sum() / T::from_usize(X)
+    }
+
+    fn mean(&self) -> Vector<Y, T>
+    where T: Ord, [T; Y * X]: Sized;
 }
