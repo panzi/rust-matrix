@@ -279,10 +279,42 @@ impl<const N: usize, T: Number> Index<usize> for Vector<N, T> {
     }
 }
 
+impl<const N: usize, T: Number> Index<std::ops::Range<usize>> for Vector<N, T> {
+    type Output = [T];
+
+    #[inline]
+    fn index(&self, range: std::ops::Range<usize>) -> &Self::Output {
+        &self.data[range]
+    }
+}
+
+impl<const START: usize, const END: usize, const N: usize, T: Number> Index<Range<START, END>> for Vector<N, T> {
+    type Output = [T];
+
+    #[inline]
+    fn index(&self, _range: Range<START, END>) -> &Self::Output {
+        &self.data[START..END]
+    }
+}
+
 impl<const N: usize, T: Number> IndexMut<usize> for Vector<N, T> {
     #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.data[index]
+    }
+}
+
+impl<const N: usize, T: Number> IndexMut<std::ops::Range<usize>> for Vector<N, T> {
+    #[inline]
+    fn index_mut(&mut self, range: std::ops::Range<usize>) -> &mut Self::Output {
+        &mut self.data[range]
+    }
+}
+
+impl<const START: usize, const END: usize, const N: usize, T: Number> IndexMut<Range<START, END>> for Vector<N, T> {
+    #[inline]
+    fn index_mut(&mut self, _range: Range<START, END>) -> &mut Self::Output {
+        &mut self.data[START..END]
     }
 }
 

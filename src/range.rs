@@ -14,6 +14,32 @@ pub struct Range<const START: usize, const END: usize> ();
 impl<const START: usize, const END: usize> Range<START, END> {
     pub const START: usize = START;
     pub const END: usize = END;
+
+    #[inline]
+    pub const fn to_range(&self) -> std::ops::Range<usize> {
+        START..END
+    }
+}
+
+impl<const START: usize, const END: usize> From<Range<START, END>> for std::ops::Range<usize> {
+    #[inline]
+    fn from(value: Range<START, END>) -> Self {
+        value.to_range()
+    }
+}
+
+impl<const START: usize, const END: usize> From<&Range<START, END>> for std::ops::Range<usize> {
+    #[inline]
+    fn from(value: &Range<START, END>) -> Self {
+        value.to_range()
+    }
+}
+
+impl<const START: usize, const END: usize> From<&mut Range<START, END>> for std::ops::Range<usize> {
+    #[inline]
+    fn from(value: &mut Range<START, END>) -> Self {
+        value.to_range()
+    }
 }
 
 impl<const START: usize, const END: usize> RangeIter for Range<START, END> {
