@@ -3,7 +3,7 @@ use std::ops::{Add, Mul, Neg, Sub, Div, AddAssign, MulAssign, SubAssign, DivAssi
 use std::iter::{Sum, Product, IntoIterator};
 use std::fmt::{Display, Debug};
 
-use crate::Vector;
+use crate::{Vector, FromUSize};
 use crate::assert::{Assert, IsTrue};
 use crate::bycolumn::{ByColumn, ByColumnMut, IntoByColumn};
 use crate::number::Number;
@@ -110,11 +110,68 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
-    pub fn map_assign<F, U>(&mut self, mut f: F)
+    pub fn map_assign<F>(&mut self, mut f: F)
     where F: FnMut(T) -> T {
         for x in self.data.iter_mut() {
             *x = f(*x);
         }
+    }
+
+    #[inline]
+    pub fn into_map<F>(mut self, mut f: F) -> Self
+    where F: FnMut(T) -> T {
+        for x in self.data.iter_mut() {
+            *x = f(*x);
+        }
+        self
+    }
+
+    #[inline]
+    pub fn fold<F, B>(&self, init: B, mut f: F) -> Vector<Y, B>
+    where F: FnMut(B, T) -> B, B: Number {
+        let mut yoffset = 0;
+        let data = Box::new([(); Y].map(|_| {
+            let value = self.data[yoffset..yoffset + X].iter().cloned().fold(init, &mut f);
+            yoffset += X;
+            value
+        }));
+
+        Vector::from(data)
+    }
+
+    #[inline]
+    pub fn sum(&self) -> Vector<Y, T> {
+        self.fold(T::default(), |acc, value| acc + value)
+    }
+
+    #[inline]
+    pub fn avg(&self) -> Vector<Y, T>
+    where T: FromUSize {
+        self.sum() / T::from_usize(X)
+    }
+
+    #[inline]
+    pub fn mean(&self) -> Vector<Y, T>
+    where T: Ord {
+        let mut yoffset = 0;
+        let data = Box::new([(); Y].map(|_| {
+            let mut data = self.data[yoffset..yoffset + X].to_vec();
+            data.sort();
+            yoffset += X;
+            if X & 1 != 0 {
+                data[X / 2]
+            } else {
+                let index = X / 2;
+                (data[index - 1] + data[index]) / (T::ONE + T::ONE)
+            }
+        }));
+
+        Vector::from(data)
+    }
+
+    #[inline]
+    pub fn product(&self) -> Vector<Y, T> {
+        self.fold(T::ONE, |acc, value| acc * value)
     }
 
     pub fn transpose(&self) -> Matrix<Y, X, T>

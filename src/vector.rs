@@ -2,7 +2,7 @@ use std::ops::{Add, Mul, Neg, Sub, Div, AddAssign, MulAssign, SubAssign, DivAssi
 use std::iter::{Sum, Product, IntoIterator};
 use std::fmt::{Display, Debug};
 
-use crate::Matrix;
+use crate::{Matrix, FromUSize};
 use crate::assert::{IsTrue, Assert};
 use crate::number::Number;
 use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Slice};
@@ -60,6 +60,80 @@ impl<const N: usize, T: Number> Vector<N, T> {
     pub fn map<F, U>(&self, f: F) -> Vector<N, U>
     where F: FnMut(T) -> U, U: Number {
         Vector { data: Box::new(self.data.map(f)) }
+    }
+
+    #[inline]
+    pub fn into_map<F>(mut self, mut f: F) -> Self
+    where F: FnMut(T) -> T {
+        for x in self.data.iter_mut() {
+            *x = f(*x);
+        }
+        self
+    }
+
+    #[inline]
+    pub fn fold<F, B>(&self, init: B, f: F) -> B
+    where F: FnMut(B, T) -> B, B: Number {
+        self.data.iter().cloned().fold(init, f)
+    }
+
+    #[inline]
+    pub fn sum(&self) -> T
+    where T: std::iter::Sum {
+        self.data.iter().cloned().sum()
+    }
+
+    #[inline]
+    pub fn product(&self) -> T
+    where T: std::iter::Product {
+        self.data.iter().cloned().product()
+    }
+
+    #[inline]
+    pub fn avg(&self) -> T
+    where T: std::iter::Sum, T: FromUSize {
+        self.sum() / T::from_usize(N)
+    }
+
+    #[inline]
+    pub fn sort(&mut self)
+    where T: Ord {
+        self.data.sort()
+    }
+
+    #[inline]
+    pub fn sorted(&self) -> Self
+    where T: Ord {
+        let mut v = self.clone();
+        v.sort();
+        v
+    }
+
+    #[inline]
+    pub fn mean(&self) -> T
+    where T: Ord {
+        let mut data = self.data.clone();
+        data.sort();
+
+        if N & 1 != 0 {
+            data[N / 2]
+        } else {
+            let index = N / 2;
+            (data[index - 1] + data[index]) / (T::ONE + T::ONE)
+        }
+    }
+
+    /// Doesn't allocate.
+    #[inline]
+    pub fn into_mean(mut self) -> T
+    where T: Ord {
+        self.data.sort();
+        if N & 1 != 0 {
+            self.data[N / 2]
+        } else {
+            let index = N / 2;
+            (self.data[index - 1] + self.data[index]) / (T::ONE + T::ONE)
+        }
     }
 
     #[inline]

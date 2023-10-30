@@ -1,4 +1,4 @@
-use crate::{Matrix, Number, Vector};
+use crate::{Matrix, Number, Vector, FromUSize};
 
 #[repr(transparent)]
 #[derive(Debug, Clone)]
@@ -103,7 +103,42 @@ where [T; X * Y]: Sized {
     where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
         self.matrix.transpose_map(f)
     }
+
+    #[inline]
+    pub fn fold<F, B>(&self, init: B, mut f: F) -> Vector<X, B>
+    where F: FnMut(B, T) -> B, B: Number {
+        let mtx = self.matrix.data();
+        let mut data = Box::new([init; X]);
+
+        for y in 0..Y {
+            let yoffset = y * X;
+            for (value, res) in mtx[yoffset..yoffset + X].iter().zip(data.iter_mut()) {
+                *res = f(*res, *value);
+            }
+        }
+
+        Vector::from(data)
+    }
+
+    #[inline]
+    pub fn sum(&self) -> Vector<X, T> {
+        self.fold(T::default(), |acc, value| acc + value)
+    }
+
+    #[inline]
+    pub fn avg(&self) -> Vector<X, T>
+    where T: FromUSize {
+        self.sum() / T::from_usize(Y)
+    }
+
+    #[inline]
+    pub fn mean(&self) -> Vector<X, T>
+    where T: Ord, [T; Y * X]: Sized {
+        self.matrix.transpose().mean()
+    }
 }
+
+// TODO: impl Slice
 
 impl<'a, const X: usize, const Y: usize, T: Number> ByColumnMut<'a, X, Y, T>
 where [T; X * Y]: Sized {

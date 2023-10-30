@@ -18,9 +18,20 @@ pub trait Number:
     const ONE: Self;
 }
 
+pub trait FromUSize {
+    fn from_usize(value: usize) -> Self;
+}
+
 impl Number for i8 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
+}
+
+impl FromUSize for i8 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
 }
 
 impl Number for i16 {
@@ -28,9 +39,23 @@ impl Number for i16 {
     const ONE: Self = 1;
 }
 
+impl FromUSize for i16 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
+}
+
 impl Number for i32 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
+}
+
+impl FromUSize for i32 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
 }
 
 impl Number for i64 {
@@ -38,9 +63,23 @@ impl Number for i64 {
     const ONE: Self = 1;
 }
 
+impl FromUSize for i64 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
+}
+
 impl Number for i128 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
+}
+
+impl FromUSize for i128 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
 }
 
 impl Number for isize {
@@ -48,9 +87,23 @@ impl Number for isize {
     const ONE: Self = 1;
 }
 
+impl FromUSize for isize {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
+}
+
 impl Number for u8 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
+}
+
+impl FromUSize for u8 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
 }
 
 impl Number for u16 {
@@ -58,9 +111,23 @@ impl Number for u16 {
     const ONE: Self = 1;
 }
 
+impl FromUSize for u16 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
+}
+
 impl Number for u32 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
+}
+
+impl FromUSize for u32 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
 }
 
 impl Number for u64 {
@@ -68,9 +135,23 @@ impl Number for u64 {
     const ONE: Self = 1;
 }
 
+impl FromUSize for u64 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
+}
+
 impl Number for u128 {
     const ZERO: Self = 0;
     const ONE: Self = 1;
+}
+
+impl FromUSize for u128 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value.try_into().unwrap()
+    }
 }
 
 impl Number for usize {
@@ -78,14 +159,35 @@ impl Number for usize {
     const ONE: Self = 1;
 }
 
+impl FromUSize for usize {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value
+    }
+}
+
 impl Number for f32 {
     const ZERO: Self = 0.0;
     const ONE: Self = 1.0;
 }
 
+impl FromUSize for f32 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value as f32
+    }
+}
+
 impl Number for f64 {
     const ZERO: Self = 0.0;
     const ONE: Self = 1.0;
+}
+
+impl FromUSize for f64 {
+    #[inline]
+    fn from_usize(value: usize) -> Self {
+        value as f64
+    }
 }
 
 impl Pow<u32> for i8 {
