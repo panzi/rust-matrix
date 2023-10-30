@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
 
-use crate::{Matrix, Number, Vector, iter::ColumnIter, ops::{MatrixAggregate, Get, GetMut}};
+use crate::{Matrix, Number, Vector, iter::ColumnIter, ops::{MatrixAggregate, Get, GetMut, Slice}, range::RangeIter};
 
 // TODO: impl Slice
 
@@ -94,6 +94,89 @@ where [T; X * Y]: Sized
     }
 }
 
+impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
+{
+    type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
+
+    #[inline]
+    fn slice(&self, (x, y): (RangeY, RangeX)) -> Self::Output {
+        self.matrix.slice(&(y, x))
+    }
+}
+
+// TODO: &, &mut
+
+impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: [(usize, usize); N]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [(usize, usize); N]) -> Self::Output {
+        self.slice(coords as &[(usize, usize); N])
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[(usize, usize); N]) -> Self::Output {
+        let mtx = self.matrix.data();
+        let data = Box::new(coords.map(|(x, y)| mtx[x * X + y]));
+
+        Vector::from(data)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(coords as &[[(usize, usize); X2]; Y2])
+    }
+}
+
+impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for IntoByColumn<X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[[(usize, usize); X2]; Y2]) -> Self::Output {
+        let mtx = self.matrix.data();
+        Matrix::from(coords.map(|row| row.map(|(x, y)| mtx[x * X + y])))
+    }
+}
+
 // ======== ByColumn ===========================================================
 
 #[repr(transparent)]
@@ -162,6 +245,89 @@ where [T; X * Y]: Sized
     #[inline]
     fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
         self.matrix.index(y, x)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
+{
+    type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
+
+    #[inline]
+    fn slice(&self, (x, y): (RangeY, RangeX)) -> Self::Output {
+        self.matrix.slice(&(y, x))
+    }
+}
+
+// TODO: &, &mut
+
+impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: [(usize, usize); N]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [(usize, usize); N]) -> Self::Output {
+        self.slice(coords as &[(usize, usize); N])
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[(usize, usize); N]) -> Self::Output {
+        let mtx = self.matrix.data();
+        let data = Box::new(coords.map(|(x, y)| mtx[x * X + y]));
+
+        Vector::from(data)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(coords as &[[(usize, usize); X2]; Y2])
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for ByColumn<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[[(usize, usize); X2]; Y2]) -> Self::Output {
+        let mtx = self.matrix.data();
+        Matrix::from(coords.map(|row| row.map(|(x, y)| mtx[x * X + y])))
     }
 }
 
@@ -251,6 +417,89 @@ where [T; X * Y]: Sized
     #[inline]
     fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
         self.matrix.index_mut(y, x)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
+{
+    type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
+
+    #[inline]
+    fn slice(&self, (x, y): (RangeY, RangeX)) -> Self::Output {
+        self.matrix.slice(&(y, x))
+    }
+}
+
+// TODO: &, &mut
+
+impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: [(usize, usize); N]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [(usize, usize); N]) -> Self::Output {
+        self.slice(coords as &[(usize, usize); N])
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; N]: Sized
+{
+    type Output = Vector<N, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[(usize, usize); N]) -> Self::Output {
+        let mtx = self.matrix.data();
+        let data = Box::new(coords.map(|(x, y)| mtx[x * X + y]));
+
+        Vector::from(data)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(&coords)
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &mut [[(usize, usize); X2]; Y2]) -> Self::Output {
+        self.slice(coords as &[[(usize, usize); X2]; Y2])
+    }
+}
+
+impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for ByColumnMut<'a, X, Y, T>
+where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
+{
+    type Output = Matrix<X2, Y2, T>;
+
+    #[inline]
+    fn slice(&self, coords: &[[(usize, usize); X2]; Y2]) -> Self::Output {
+        let mtx = self.matrix.data();
+        Matrix::from(coords.map(|row| row.map(|(x, y)| mtx[x * X + y])))
     }
 }
 
