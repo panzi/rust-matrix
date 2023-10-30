@@ -9,6 +9,7 @@ mod assert;
 pub mod ops;
 pub mod range;
 pub mod bycolumn;
+pub mod iter;
 
 pub use number::*;
 pub use vector::*;

@@ -3,15 +3,16 @@ use std::ops::{Add, Mul, Neg, Sub, Div, AddAssign, MulAssign, SubAssign, DivAssi
 use std::iter::{Sum, Product, IntoIterator};
 use std::fmt::{Display, Debug};
 
+use crate::iter::{RowIter, ColumnIter};
 use crate::{Vector, FromUSize};
 use crate::assert::{Assert, IsTrue};
 use crate::bycolumn::{ByColumn, ByColumnMut, IntoByColumn};
 use crate::number::Number;
-use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign, Slice};
+use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Dot, DotAssign, Slice, Tap, Pipe};
 use crate::range::{RangeIter, Range};
 
 #[repr(transparent)]
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialOrd, Ord)]
 pub struct Matrix<const X: usize, const Y: usize, T: Number=f64>
 where [T; X * Y]: Sized
 {
@@ -46,8 +47,53 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
-    pub fn iter_vectors(&self) -> impl std::iter::Iterator<Item = Vector<X, T>> + '_ {
-        unsafe { self.data.as_chunks_unchecked::<X>() }.iter().map(Vector::from)
+    pub fn iter_vectors(&self) -> RowIter<'_, X, Y, T> {
+        self.rows()
+    }
+
+    #[inline]
+    pub fn try_row(&self, y: usize) -> Option<Vector<X, T>> {
+        if y >= Y {
+            return None;
+        }
+        let mut data = Box::new([T::default(); X]);
+        let yoffset = y * X;
+        data.copy_from_slice(&self.data[yoffset..yoffset + X]);
+        Some(Vector::from(data))
+    }
+
+    #[inline]
+    pub fn row(&self, y: usize) -> Vector<X, T> {
+        self.try_row(y).unwrap()
+    }
+
+    #[inline]
+    pub fn rows(&self) -> RowIter<'_, X, Y, T> {
+        RowIter::new(self)
+    }
+
+    #[inline]
+    pub fn try_column(&self, x: usize) -> Option<Vector<Y, T>> {
+        if x >= X {
+            return None;
+        }
+        let mut yoffset = 0;
+        let data = Box::new([(); Y].map(|_| {
+            let value = self.data[yoffset + x];
+            yoffset += X;
+            value
+        }));
+        Some(Vector::from(data))
+    }
+
+    #[inline]
+    pub fn column(&self, x: usize) -> Vector<Y, T> {
+        self.try_column(x).unwrap()
+    }
+
+    #[inline]
+    pub fn columns(&self) -> ColumnIter<'_, X, Y, T> {
+        ColumnIter::new(self)
     }
 
     #[inline]
@@ -140,14 +186,45 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
+    pub fn fold_row<F, B>(&self, y: usize, init: B, f: F) -> B
+    where F: FnMut(B, T) -> B, B: Number {
+        let yoffset = y * X;
+        self.data[yoffset..yoffset + X].iter().cloned().fold(init, f)
+    }
+
+    #[inline]
+    pub fn fold_column<F, B>(&self, x: usize, init: B, mut f: F) -> B
+    where F: FnMut(B, T) -> B, B: Number {
+        let data = self.data();
+        let mut acc = init;
+
+        for y in 0..Y {
+            acc = f(acc, data[y * X + x]);
+        }
+
+        acc
+    }
+
+    #[inline]
     pub fn sum(&self) -> Vector<Y, T> {
         self.fold(T::default(), |acc, value| acc + value)
+    }
+
+    #[inline]
+    pub fn sum_column(&self, x: usize) -> T {
+        self.fold_column(x, T::default(), |acc, value| acc + value)
     }
 
     #[inline]
     pub fn avg(&self) -> Vector<Y, T>
     where T: FromUSize {
         self.sum() / T::from_usize(X)
+    }
+
+    #[inline]
+    pub fn avg_column(&self, x: usize) -> T
+    where T: FromUSize {
+        self.sum_column(x) / T::from_usize(Y)
     }
 
     #[inline]
@@ -170,8 +247,27 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
+    pub fn mean_column(&self, x: usize) -> T
+    where T: Ord {
+        let mut data = self.column(x);
+        data.sort();
+        
+        if Y & 1 != 0 {
+            data[Y / 2]
+        } else {
+            let index = Y / 2;
+            (data[index - 1] + data[index]) / (T::ONE + T::ONE)
+        }
+    }
+
+    #[inline]
     pub fn product(&self) -> Vector<Y, T> {
         self.fold(T::ONE, |acc, value| acc * value)
+    }
+
+    #[inline]
+    pub fn product_column(&self, x: usize) -> T {
+        self.fold_column(x, T::ONE, |acc, value| acc * value)
     }
 
     pub fn transpose(&self) -> Matrix<Y, X, T>
@@ -273,6 +369,12 @@ where [T; X * Y]: Sized
         (Range::<0, X>(), Range::<0, Y>())
     }
 }
+
+impl<const X: usize, const Y: usize, T: Number> Tap for Matrix<X, Y, T>
+where [T; X * Y]: Sized {}
+
+impl<const X: usize, const Y: usize, T: Number> Pipe for Matrix<X, Y, T>
+where [T; X * Y]: Sized {}
 
 impl<const X: usize, const Y: usize, T: Number> IntoIterator for Matrix<X, Y, T>
 where [T; X * Y]: Sized {

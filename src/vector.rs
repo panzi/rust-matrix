@@ -5,11 +5,11 @@ use std::fmt::{Display, Debug};
 use crate::{Matrix, FromUSize};
 use crate::assert::{IsTrue, Assert};
 use crate::number::Number;
-use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Slice};
+use crate::ops::{Get, GetMut, Pow, PowAssign, Unit, Slice, Tap, Pipe};
 use crate::range::{RangeIter, Range};
 
 #[repr(transparent)]
-#[derive(Clone)]
+#[derive(Clone, Hash, PartialOrd, Ord)]
 pub struct Vector<const N: usize, T: Number=f64> {
     data: Box<[T; N]>
 }
@@ -17,6 +17,11 @@ pub struct Vector<const N: usize, T: Number=f64> {
 impl<const N: usize, T: Number> Vector<N, T> {
     pub const N: usize = N;
     pub const SHAPE: [usize; 1] = [N];
+
+    #[inline]
+    pub const fn len(&self) -> usize {
+        N
+    }
 
     #[inline]
     pub fn iter(&self) -> impl std::iter::Iterator<Item = &T> {
@@ -141,6 +146,12 @@ impl<const N: usize, T: Number> Vector<N, T> {
         Range::<0, N>()
     }
 }
+
+impl<const N: usize, T: Number> Tap for Vector<N, T>
+where [T; N]: Sized {}
+
+impl<const N: usize, T: Number> Pipe for Vector<N, T>
+where [T; N]: Sized {}
 
 impl<const N: usize, T: Number> IntoIterator for Vector<N, T> {
     type Item = T;

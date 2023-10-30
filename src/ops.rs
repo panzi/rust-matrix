@@ -67,3 +67,37 @@ pub trait Slice<Idx: ?Sized> {
 
     fn slice(&self, index: Idx) -> Self::Output;
 }
+
+pub trait Tap {
+    #[inline]
+    fn tap<F>(&self, f: F)
+    where F: FnOnce(&Self) {
+        f(self);
+    }
+
+    #[inline]
+    fn tap_mut<F>(&mut self, f: F)
+    where F: FnOnce(&Self) {
+        f(self);
+    }
+}
+
+pub trait Pipe {
+    #[inline]
+    fn pipe<F, T>(&self, f: F) -> T
+    where F: FnOnce(&Self) -> T {
+        f(self)
+    }
+
+    #[inline]
+    fn pipe_mut<F, T>(&mut self, f: F) -> T
+    where F: FnOnce(&Self) -> T {
+        f(self)
+    }
+
+    #[inline]
+    fn into_pipe<F, T>(self, f: F) -> T
+    where F: FnOnce(Self) -> T, Self: Sized {
+        f(self)
+    }
+}
