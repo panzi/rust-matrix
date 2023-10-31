@@ -13,13 +13,13 @@ use crate::range::{RangeIter, Range};
 
 #[repr(transparent)]
 #[derive(Clone, Hash, PartialOrd, Ord)]
-pub struct Matrix<const X: usize, const Y: usize, T: Number=f64>
+pub struct Matrix<const X: usize, const Y: usize, T: Number=f64, D: AsRef<[T; X * Y]>=Box<[T; X * Y]>>
 where [T; X * Y]: Sized
 {
-    data: Box<[T; X * Y]>
+    data: D
 }
 
-impl<const X: usize, const Y: usize, T: Number> Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     pub const X: usize = X;
@@ -118,17 +118,18 @@ where [T; X * Y]: Sized
 
     #[inline]
     pub fn data(&self) -> &[T; X * Y] {
-        &self.data
+        self.data.as_ref()
     }
 
     #[inline]
-    pub fn data_mut(&mut self) -> &mut [T; X * Y] {
-        &mut self.data
+    pub fn data_mut(&mut self) -> &mut [T; X * Y]
+    where D: AsMut<[T; X * Y]> {
+        self.data.as_mut()
     }
 
     #[inline]
-    pub fn into_data(self) -> [T; X * Y] {
-        *self.data
+    pub fn into_data(self) -> D {
+        self.data
     }
 
     #[inline]
@@ -327,13 +328,13 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Tap for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Tap for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized {}
 
-impl<const X: usize, const Y: usize, T: Number> Pipe for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Pipe for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized {}
 
-impl<const X: usize, const Y: usize, T: Number> MatrixAggregate<X, Y, T> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> MatrixAggregate<X, Y, T> for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized {
     #[inline]
     fn fold<F, B>(&self, init: B, mut f: F) -> Vector<Y, B>

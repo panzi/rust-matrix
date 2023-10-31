@@ -8,10 +8,10 @@ use crate::{Matrix, Number, Vector, iter::ColumnIter, ops::{MatrixAggregate, Get
 
 #[repr(transparent)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct IntoByColumn<const X: usize, const Y: usize, T: Number=f64>
+pub struct IntoByColumn<const X: usize, const Y: usize, T: Number=f64, D: AsRef<[T; X * Y]>>
 where [T; X * Y]: Sized
 {
-    pub matrix: Matrix<X, Y, T>
+    pub matrix: Matrix<X, Y, T, D>
 }
 
 impl<const X: usize, const Y: usize, T: Number> IntoByColumn<X, Y, T>
