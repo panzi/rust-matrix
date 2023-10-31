@@ -334,7 +334,8 @@ where [T; X * Y]: Sized {}
 impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Pipe for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized {}
 
-impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> MatrixAggregate<X, Y, T> for Matrix<X, Y, T, D>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> MatrixAggregate<X, Y, T>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized {
     #[inline]
     fn fold<F, B>(&self, init: B, mut f: F) -> Vector<Y, B>
@@ -370,7 +371,7 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> IntoIterator for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> IntoIterator for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized {
     type Item = T;
     type IntoIter = std::array::IntoIter<T, { X * Y }>;
@@ -381,7 +382,8 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> AsRef<Self> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> AsRef<Self>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -390,7 +392,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> AsRef<[[T; X]]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> AsRef<[[T; X]]>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -424,7 +427,7 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Display for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Display for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -498,7 +501,7 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Debug for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Debug for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -514,7 +517,8 @@ where [T; X * Y]: Sized
 
 // ======== Equality ===========================================================
 
-impl<const X: usize, const Y: usize, T: Number> PartialEq for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D1: AsRef<[T; X * Y]>, D2: AsRef<[T; X * Y]>> PartialEq<Matrix<X, Y, T, D2>>
+for Matrix<X, Y, T, D1>
 where T: PartialEq, [T; X * Y]: Sized {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -522,7 +526,8 @@ where T: PartialEq, [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> PartialEq<[[T; X]; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> PartialEq<[[T; X]; Y]>
+for Matrix<X, Y, T, D>
 where T: PartialEq, [T; X * Y]: Sized {
     #[inline]
     fn eq(&self, other: &[[T; X]; Y]) -> bool {
@@ -531,7 +536,8 @@ where T: PartialEq, [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> PartialEq<&[[T; X]; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> PartialEq<&[[T; X]; Y]>
+for Matrix<X, Y, T, D>
 where T: PartialEq, [T; X * Y]: Sized {
     #[inline]
     fn eq(&self, other: &&[[T; X]; Y]) -> bool {
@@ -540,7 +546,8 @@ where T: PartialEq, [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> PartialEq<Matrix<X, Y, T>> for &[[T; X]; Y]
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> PartialEq<Matrix<X, Y, T, D>>
+for &[[T; X]; Y]
 where T: PartialEq, [T; X * Y]: Sized {
     #[inline]
     fn eq(&self, other: &Matrix<X, Y, T>) -> bool {
@@ -549,7 +556,8 @@ where T: PartialEq, [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> PartialEq<Matrix<X, Y, T>> for [[T; X]; Y]
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> PartialEq<Matrix<X, Y, T, D>>
+for [[T; X]; Y]
 where T: PartialEq, [T; X * Y]: Sized {
     #[inline]
     fn eq(&self, other: &Matrix<X, Y, T>) -> bool {
@@ -558,7 +566,8 @@ where T: PartialEq, [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> PartialEq<[&[T; X]; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> PartialEq<[&[T; X]; Y]>
+for Matrix<X, Y, T, D>
 where T: PartialEq, [T; X * Y]: Sized {
     #[inline]
     fn eq(&self, other: &[&[T; X]; Y]) -> bool {
@@ -566,7 +575,8 @@ where T: PartialEq, [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> PartialEq<Matrix<X, Y, T>> for [&[T; X]; Y]
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> PartialEq<Matrix<X, Y, T, D>>
+for [&[T; X]; Y]
 where T: PartialEq, [T; X * Y]: Sized {
     #[inline]
     fn eq(&self, other: &Matrix<X, Y, T>) -> bool {
@@ -574,12 +584,13 @@ where T: PartialEq, [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Eq for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Eq for Matrix<X, Y, T, D>
 where T: Eq, [T; X * Y]: Sized {}
 
 // ======== From ===============================================================
 
-impl<const X: usize, const Y: usize, T: Number> From<Box<[T; X * Y]>> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<Box<[T; X * Y]>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -588,7 +599,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<[T; X * Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<[T; X * Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -597,7 +609,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<[[T; X]; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<[[T; X]; Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     // XXX: is this correct?
@@ -607,7 +620,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<Box<[[T; X]; Y]>> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<Box<[[T; X]; Y]>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     // XXX: is this correct?
@@ -617,7 +631,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&[[T; X]; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<&[[T; X]; Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     // XXX: is this correct?
@@ -627,7 +642,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&[&[T; X]; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<&[&[T; X]; Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -641,7 +657,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<[&[T; X]; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<[&[T; X]; Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -650,7 +667,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&[Vector<X, T>; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<&[Vector<X, T>; Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -664,7 +682,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<[Vector<X, T>; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<[Vector<X, T>; Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -673,7 +692,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&[&Vector<X, T>; Y]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<&[&Vector<X, T>; Y]>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -687,7 +707,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<Vector<{X * Y}, T>> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<Vector<{X * Y}, T>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -697,7 +718,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&Vector<{X * Y}, T>> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<&Vector<{X * Y}, T>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -706,7 +728,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<T> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<T>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -715,7 +738,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&T> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> From<&T>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -725,7 +749,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>> for [T; X * Y]
+impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>>
+for [T; X * Y]
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -734,7 +759,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>> for Vector<{X * Y}, T>
+impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>>
+for Vector<{X * Y}, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -743,7 +769,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&Matrix<X, Y, T>> for Vector<{X * Y}, T>
+impl<const X: usize, const Y: usize, T: Number> From<&Matrix<X, Y, T>>
+for Vector<{X * Y}, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -752,7 +779,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>> for Box<[T; X * Y]>
+impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>>
+for Box<[T; X * Y]>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -761,7 +789,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>> for [[T; X]; Y]
+impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>>
+for [[T; X]; Y]
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -770,7 +799,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<&Matrix<X, Y, T>> for [[T; X]; Y]
+impl<const X: usize, const Y: usize, T: Number> From<&Matrix<X, Y, T>>
+for [[T; X]; Y]
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -780,19 +810,21 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X1: usize, const Y1: usize, const X2: usize, const Y2: usize, T: Number> From<&Matrix<X1, Y1, T>> for Matrix<X2, Y2, T>
+impl<const X1: usize, const Y1: usize, const X2: usize, const Y2: usize, T: Number, D: AsRef<[T; X1 * Y1]>> From<&Matrix<X1, Y1, T, D>>
+for Matrix<X2, Y2, T>
 where [T; X1 * Y1]: Sized, [T; X2 * Y2]: Sized, Assert<{ X1 * Y1 == X2 * Y2 }>: IsTrue
 {
     #[inline]
     fn from(value: &Matrix<X1, Y1, T>) -> Self {
-        let data = &*value.data;
+        let data = value.data();
         Self { data: Box::new(unsafe { std::mem::transmute_copy(data) }) }
     }
 }
 
 // ======== Index ==============================================================
 
-impl<const X: usize, const Y: usize, T: Number> Index<usize> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Index<usize>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = [T; X];
@@ -803,7 +835,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Index<(usize, usize)> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Index<(usize, usize)>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -814,7 +847,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> IndexMut<usize> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> IndexMut<usize>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -823,7 +857,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> IndexMut<(usize, usize)> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> IndexMut<(usize, usize)>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -834,7 +869,8 @@ where [T; X * Y]: Sized
 
 // ======== Get ================================================================
 
-impl<const X: usize, const Y: usize, T: Number> Get<usize> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Get<usize>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = [T; X];
@@ -845,7 +881,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Get<(usize, usize)> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Get<(usize, usize)>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -856,7 +893,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> GetMut<usize> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> GetMut<usize>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -865,7 +903,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> GetMut<(usize, usize)> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> GetMut<(usize, usize)>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -876,7 +915,8 @@ where [T; X * Y]: Sized
 
 // ======== Slice ==============================================================
 
-impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeX, RangeY)> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeX, RangeY)>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 {
     type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
@@ -887,7 +927,8 @@ where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<&mut (RangeX, RangeY)> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, RangeX: RangeIter, RangeY: RangeIter> Slice<&mut (RangeX, RangeY)>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 {
     type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
@@ -898,7 +939,8 @@ where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<&(RangeX, RangeY)> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, RangeX: RangeIter, RangeY: RangeIter> Slice<&(RangeX, RangeY)>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 {
     type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
@@ -921,7 +963,8 @@ where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<[(usize, usize); N]>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -932,7 +975,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&mut [(usize, usize); N]>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -943,7 +987,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&[(usize, usize); N]>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -956,7 +1001,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -967,7 +1013,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -978,7 +1025,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]>
+for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -993,7 +1041,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 
 macro_rules! impl_ops {
     (@move_rhs @commutative $trait:ident $trait_assign:ident $op:ident $op_assign:ident $(where $($where:tt)*)?) => {
-        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number, D1: AsRef<[T; X * Y]>, D2: AsRef<[T; X * Y]>> $trait<Matrix<X, Y, T, D1>>
+        for &Matrix<X, Y, T, D2>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1008,7 +1057,8 @@ macro_rules! impl_ops {
     };
 
     (@move_rhs @non_commutative $trait:ident $trait_assign:ident $op:ident $op_assign:ident $(where $($where:tt)*)?) => {
-        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number, D1: AsRef<[T; X * Y]>, D2: AsRef<[T; X * Y]>> $trait<Matrix<X, Y, T, D1>>
+        for &Matrix<X, Y, T, D2>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1029,7 +1079,8 @@ macro_rules! impl_ops {
     };
 
     (@primitive $type:ident @commutative $trait:ident $trait_assign:ident $op:ident $op_assign:ident $(where $($where:tt)*)?) => {
-        impl<const X: usize, const Y: usize> $trait<Matrix<X, Y, $type>> for $type
+        impl<const X: usize, const Y: usize> $trait<Matrix<X, Y, $type>>
+        for $type
         where [$type; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, $type>;
@@ -1044,7 +1095,8 @@ macro_rules! impl_ops {
     };
 
     (@primitive $type:ident @non_commutative $trait:ident $trait_assign:ident $op:ident $op_assign:ident $(where $($where:tt)*)?) => {
-        impl<const X: usize, const Y: usize> $trait<Matrix<X, Y, $type>> for $type
+        impl<const X: usize, const Y: usize> $trait<Matrix<X, Y, $type>>
+        for $type
         where [$type; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, $type>;
@@ -1085,7 +1137,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1098,7 +1151,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<T> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<T>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1111,7 +1165,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1124,7 +1179,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1137,7 +1193,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<Y, T>> for IntoByColumn<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<Y, T>>
+        for IntoByColumn<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1148,7 +1205,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<Y, T>> for IntoByColumn<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<Y, T>>
+        for IntoByColumn<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1163,7 +1221,8 @@ macro_rules! impl_ops {
 
         // ======== ref ========================================================
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1179,7 +1238,8 @@ macro_rules! impl_ops {
 
         impl_ops!(@move_rhs @$commutative $trait $trait_assign $op $op_assign $(where $($where)*)?);
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<T> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<T>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1193,7 +1253,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1204,7 +1265,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1218,7 +1280,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&mut Vector<X, T>> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&mut Vector<X, T>>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1232,7 +1295,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&[T; X]> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&[T; X]>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1246,7 +1310,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&mut [T; X]> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&mut [T; X]>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1260,7 +1325,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<[T; X]> for &Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<[T; X]>
+        for &Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1274,7 +1340,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<Y, T>> for ByColumn<'_, X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<Y, T>>
+        for ByColumn<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1288,7 +1355,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<Y, T>> for ByColumn<'_, X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<Y, T>>
+        for ByColumn<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1302,7 +1370,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&mut Vector<Y, T>> for ByColumn<'_, X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&mut Vector<Y, T>>
+        for ByColumn<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1318,7 +1387,8 @@ macro_rules! impl_ops {
 
         // ======== mut ref ====================================================
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>> for &mut Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>>
+        for &mut Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1329,7 +1399,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for &mut Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>>
+        for &mut Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1340,7 +1411,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<T> for &mut Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<T>
+        for &mut Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1351,7 +1423,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>> for &mut Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<X, T>>
+        for &mut Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1362,7 +1435,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>> for &mut Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<X, T>>
+        for &mut Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1373,7 +1447,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<Y, T>> for ByColumnMut<'_, X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Vector<Y, T>>
+        for ByColumnMut<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1384,7 +1459,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<Y, T>> for ByColumnMut<'_, X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Vector<Y, T>>
+        for ByColumnMut<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1409,7 +1485,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&Matrix<X, Y, T>> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&Matrix<X, Y, T>>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1420,7 +1497,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<T> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<T>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1431,7 +1509,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&T> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&T>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1443,7 +1522,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<Vector<X, T>> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<Vector<X, T>>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1452,7 +1532,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&Vector<X, T>> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&Vector<X, T>>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1461,7 +1542,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&[T; X]> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&[T; X]>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1470,7 +1552,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&mut [T; X]> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&mut [T; X]>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1479,7 +1562,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<[T; X]> for Matrix<X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<[T; X]>
+        for Matrix<X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1488,7 +1572,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<Vector<Y, T>> for ByColumnMut<'_, X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<Vector<Y, T>>
+        for ByColumnMut<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1497,7 +1582,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&Vector<Y, T>> for ByColumnMut<'_, X, Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait_assign<&Vector<Y, T>>
+        for ByColumnMut<'_, X, Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             #[inline]
@@ -1508,7 +1594,8 @@ macro_rules! impl_ops {
 
         // ======== Vector x Matrix ============================================
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for Vector<X, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>>
+        for Vector<X, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1519,7 +1606,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>> for Vector<X, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>>
+        for Vector<X, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1530,7 +1618,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for &Vector<X, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>>
+        for &Vector<X, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1543,7 +1632,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>> for &Vector<X, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>>
+        for &Vector<X, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1554,7 +1644,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>> for &mut Vector<X, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<Matrix<X, Y, T>>
+        for &mut  Vector<X, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1565,7 +1656,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>> for &mut Vector<X, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<&Matrix<X, Y, T>>
+        for &mut Vector<X, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1578,7 +1670,8 @@ macro_rules! impl_ops {
 
         // ======== ByColumn x Vector ==========================================
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumn<'_, X, Y, T>> for Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumn<'_, X, Y, T>>
+        for Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1589,7 +1682,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumn<'_, X, Y, T>> for &mut Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumn<'_, X, Y, T>>
+        for &mut Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1600,7 +1694,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumn<'_, X, Y, T>> for &Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumn<'_, X, Y, T>>
+        for &Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1616,7 +1711,8 @@ macro_rules! impl_ops {
 
         // ======== ByColumnMut x Vector =======================================
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumnMut<'_, X, Y, T>> for Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumnMut<'_, X, Y, T>>
+        for Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1627,7 +1723,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumnMut<'_, X, Y, T>> for &mut Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumnMut<'_, X, Y, T>>
+        for &mut Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1638,7 +1735,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumnMut<'_, X, Y, T>> for &Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<ByColumnMut<'_, X, Y, T>>
+        for &Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1654,7 +1752,8 @@ macro_rules! impl_ops {
 
         // ======== IntoByColumn x Vector ======================================
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByColumn<X, Y, T>> for Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByColumn<X, Y, T>>
+        for Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1665,7 +1764,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByColumn<X, Y, T>> for &mut Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByColumn<X, Y, T>>
+        for &mut Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1676,7 +1776,8 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByColumn<X, Y, T>> for &Vector<Y, T>
+        impl<const X: usize, const Y: usize, T: Number> $trait<IntoByColumn<X, Y, T>>
+        for &Vector<Y, T>
         where [T; X * Y]: Sized $(, $($where)*)?
         {
             type Output = Matrix<X, Y, T>;
@@ -1815,7 +1916,8 @@ impl_helper! {
 
 macro_rules! impl_pow {
     ($type:ident $($cast:tt)*) => {
-        impl<const X: usize, const Y: usize> Pow<Matrix<X, Y, Self>> for $type
+        impl<const X: usize, const Y: usize> Pow<Matrix<X, Y, Self>>
+        for $type
         where [Self; X * Y]: Sized
         {
             type Output = Matrix<X, Y, Self>;
@@ -1837,7 +1939,8 @@ impl_pow!(i16 as u32);
 impl_pow!(f32);
 impl_pow!(f64);
 
-impl<const X: usize, const Y: usize> Pow<&Matrix<X, Y, Self>> for f32
+impl<const X: usize, const Y: usize> Pow<&Matrix<X, Y, Self>>
+for f32
 where [Self; X * Y]: Sized
 {
     type Output = Matrix<X, Y, Self>;
@@ -1851,7 +1954,8 @@ where [Self; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize> Pow<&Matrix<X, Y, Self>> for f64
+impl<const X: usize, const Y: usize> Pow<&Matrix<X, Y, Self>>
+for f64
 where [Self; X * Y]: Sized
 {
     type Output = Matrix<X, Y, Self>;
@@ -1921,7 +2025,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> Sum<&'a Matrix<X, Y, T>> for Matrix<X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number> Sum<&'a Matrix<X, Y, T>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     fn sum<I: Iterator<Item = &'a Self>>(mut iter: I) -> Self {
@@ -1952,7 +2057,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> Product<&'a Matrix<X, Y, T>> for Matrix<X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number> Product<&'a Matrix<X, Y, T>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized
 {
     fn product<I: Iterator<Item = &'a Self>>(mut iter: I) -> Self {
@@ -1969,7 +2075,8 @@ where [T; X * Y]: Sized
 
 // ======== Dot ================================================================
 
-impl<const X: usize, const Y: usize, T: Number> Dot<Matrix<Y, X, T>> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> Dot<Matrix<Y, X, T>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     type Output = Matrix<Y, Y, T>;
 
@@ -1979,7 +2086,8 @@ where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Dot<&Matrix<Y, X, T>> for Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> Dot<&Matrix<Y, X, T>>
+for Matrix<X, Y, T>
 where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     type Output = Matrix<Y, Y, T>;
 
@@ -1989,7 +2097,8 @@ where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Dot<Matrix<Y, X, T>> for &Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> Dot<Matrix<Y, X, T>>
+for &Matrix<X, Y, T>
 where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     type Output = Matrix<Y, Y, T>;
 
@@ -1999,7 +2108,8 @@ where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Dot<Matrix<Y, X, T>> for &mut Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> Dot<Matrix<Y, X, T>>
+for &mut Matrix<X, Y, T>
 where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     type Output = Matrix<Y, Y, T>;
 
@@ -2009,7 +2119,8 @@ where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Dot<&Matrix<Y, X, T>> for &mut Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> Dot<&Matrix<Y, X, T>>
+for &mut Matrix<X, Y, T>
 where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     type Output = Matrix<Y, Y, T>;
 
@@ -2019,7 +2130,8 @@ where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Dot<&Matrix<Y, X, T>> for &Matrix<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number> Dot<&Matrix<Y, X, T>>
+for &Matrix<X, Y, T>
 where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     type Output = Matrix<Y, Y, T>;
 
@@ -2042,7 +2154,8 @@ where [T; X * Y]: Sized, [T; Y * X]: Sized, [T; Y * Y]: Sized {
     }
 }
 
-impl<const N: usize, T: Number> DotAssign<&Matrix<N, N, T>> for Matrix<N, N, T>
+impl<const N: usize, T: Number> DotAssign<&Matrix<N, N, T>>
+for Matrix<N, N, T>
 where [T; N * N]: Sized {
     #[inline]
     fn dot_assign(&mut self, rhs: &Matrix<N, N, T>) {

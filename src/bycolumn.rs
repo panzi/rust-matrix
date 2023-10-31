@@ -8,21 +8,21 @@ use crate::{Matrix, Number, Vector, iter::ColumnIter, ops::{MatrixAggregate, Get
 
 #[repr(transparent)]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct IntoByColumn<const X: usize, const Y: usize, T: Number=f64, D: AsRef<[T; X * Y]>>
+pub struct IntoByColumn<const X: usize, const Y: usize, T: Number=f64, D: AsRef<[T; X * Y]>=Box<[T; X * Y]>>
 where [T; X * Y]: Sized
 {
     pub matrix: Matrix<X, Y, T, D>
 }
 
-impl<const X: usize, const Y: usize, T: Number> IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized {
     #[inline]
-    pub fn new(matrix: Matrix<X, Y, T>) -> Self {
+    pub fn new(matrix: Matrix<X, Y, T, D>) -> Self {
         Self { matrix }
     }
 
     #[inline]
-    pub fn iter_vectors(&self) -> ColumnIter<'_, X, Y, T> {
+    pub fn iter_vectors(&self) -> ColumnIter<'_, X, Y, T, D> {
         self.matrix.columns()
     }
 
@@ -39,7 +39,8 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> MatrixAggregate<Y, X, T> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> MatrixAggregate<Y, X, T>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized {
     #[inline]
     fn fold<F, B>(&self, init: B, f: F) -> Vector<X, B>
@@ -54,7 +55,8 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Get<(usize, usize)> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Get<(usize, usize)>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -65,7 +67,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> GetMut<(usize, usize)> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> GetMut<(usize, usize)>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -74,7 +77,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> Index<(usize, usize)> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Index<(usize, usize)>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -85,7 +89,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> IndexMut<(usize, usize)> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> IndexMut<(usize, usize)>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -94,7 +99,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 {
     type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
@@ -107,7 +113,8 @@ where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 
 // TODO: &, &mut
 
-impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<[(usize, usize); N]>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -118,7 +125,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&mut [(usize, usize); N]>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -129,7 +137,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&[(usize, usize); N]>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -143,7 +152,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -154,7 +164,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -165,7 +176,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for IntoByColumn<X, Y, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]>
+for IntoByColumn<X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -181,16 +193,16 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ByColumn<'a, const X: usize, const Y: usize, T: Number=f64>
+pub struct ByColumn<'a, const X: usize, const Y: usize, T: Number=f64, D: AsRef<[T; X * Y]>=Box<[T; X * Y]>>
 where [T; X * Y]: Sized
 {
     pub matrix: &'a Matrix<X, Y, T>
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized {
     #[inline]
-    pub fn new(matrix: &'a Matrix<X, Y, T>) -> Self {
+    pub fn new(matrix: &'a Matrix<X, Y, T, D>) -> Self {
         Self { matrix }
     }
 
@@ -211,7 +223,8 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> MatrixAggregate<Y, X, T> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> MatrixAggregate<Y, X, T, D>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized {
     #[inline]
     fn fold<F, B>(&self, init: B, f: F) -> Vector<X, B>
@@ -226,7 +239,8 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> Get<(usize, usize)> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Get<(usize, usize)>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -237,7 +251,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> Index<(usize, usize)> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Index<(usize, usize)>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -248,7 +263,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 {
     type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
@@ -261,7 +277,8 @@ where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 
 // TODO: &, &mut
 
-impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<[(usize, usize); N]>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -272,7 +289,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&mut [(usize, usize); N]>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -283,7 +301,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&[(usize, usize); N]>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -297,7 +316,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -308,7 +328,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -319,7 +340,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for ByColumn<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]>
+for ByColumn<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -335,16 +357,16 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 
 #[repr(transparent)]
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct ByColumnMut<'a, const X: usize, const Y: usize, T: Number=f64>
+pub struct ByColumnMut<'a, const X: usize, const Y: usize, T: Number=f64, D: AsRef<[T; X * Y]>=Box<[T; X * Y]>>
 where [T; X * Y]: Sized
 {
-    pub matrix: &'a mut Matrix<X, Y, T>
+    pub matrix: &'a mut Matrix<X, Y, T, D>
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized {
     #[inline]
-    pub fn new(matrix: &'a mut Matrix<X, Y, T>) -> Self {
+    pub fn new(matrix: &'a mut Matrix<X, Y, T, D>) -> Self {
         Self { matrix }
     }
 
@@ -365,7 +387,8 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> MatrixAggregate<Y, X, T> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> MatrixAggregate<Y, X, T, D>
+for ByColumnMut<'a, X, Y, T>
 where [T; X * Y]: Sized {
     #[inline]
     fn fold<F, B>(&self, init: B, f: F) -> Vector<X, B>
@@ -380,7 +403,8 @@ where [T; X * Y]: Sized {
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> Get<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Get<(usize, usize)>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -391,7 +415,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> GetMut<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> GetMut<(usize, usize)>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -400,7 +425,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> Index<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Index<(usize, usize)>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized
 {
     type Output = T;
@@ -411,7 +437,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number> IndexMut<(usize, usize)> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> IndexMut<(usize, usize)>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -420,7 +447,8 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, RangeX: RangeIter, RangeY: RangeIter> Slice<(RangeY, RangeX)>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 {
     type Output = Matrix<{ RangeX::LEN }, { RangeY::LEN }, T>;
@@ -433,7 +461,8 @@ where [T; X * Y]: Sized, [T; RangeX::LEN * RangeY::LEN]: Sized
 
 // TODO: &, &mut
 
-impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<[(usize, usize); N]> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<[(usize, usize); N]>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -444,7 +473,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&mut [(usize, usize); N]> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&mut [(usize, usize); N]>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -455,7 +485,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const N: usize> Slice<&[(usize, usize); N]> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const N: usize> Slice<&[(usize, usize); N]>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; N]: Sized
 {
     type Output = Vector<N, T>;
@@ -469,7 +500,8 @@ where [T; X * Y]: Sized, [T; N]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<[[(usize, usize); X2]; Y2]>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -480,7 +512,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&mut [[(usize, usize); X2]; Y2]>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -491,7 +524,8 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
     }
 }
 
-impl<'a, const X: usize, const Y: usize, T: Number, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]> for ByColumnMut<'a, X, Y, T>
+impl<'a, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>, const X2: usize, const Y2: usize> Slice<&[[(usize, usize); X2]; Y2]>
+for ByColumnMut<'a, X, Y, T, D>
 where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 {
     type Output = Matrix<X2, Y2, T>;
@@ -506,7 +540,7 @@ where [T; X * Y]: Sized, [T; X2 * Y2]: Sized
 // ======== Helper Functions ===================================================
 
 #[inline]
-pub fn mean_by_column<const X: usize, const Y: usize, T: Number>(matrix: &Matrix<X, Y, T>) -> Vector<X, T>
+pub fn mean_by_column<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>>(matrix: &Matrix<X, Y, T, D>) -> Vector<X, T>
 where [T; X * Y]: Sized, T: Ord {
     let mut iter = matrix.columns();
     let data = Box::new([(); X].map(|_| {
@@ -524,7 +558,7 @@ where [T; X * Y]: Sized, T: Ord {
 }
 
 #[inline]
-pub fn fold_by_column<F, B, const X: usize, const Y: usize, T: Number>(matrix: &Matrix<X, Y, T>, init: B, mut f: F) -> Vector<X, B>
+pub fn fold_by_column<F, B, const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>>(matrix: &Matrix<X, Y, T, D>, init: B, mut f: F) -> Vector<X, B>
 where F: FnMut(B, T) -> B, B: Number, [T; X * Y]: Sized {
     let mtx = matrix.data();
     let mut data = Box::new([init; X]);
