@@ -2,7 +2,7 @@
 #![feature(generic_const_exprs)]
 use std::ops::MulAssign;
 
-use matrix::{*, ops::{Pow, PowAssign, Slice, Unit}, range::{Range, RangeIter}};
+use matrix::{*, ops::{Pow, PowAssign, Slice, Unit}, range::{Range, RangeIter, RangeWithStep}};
 
 #[test]
 fn unit() {
@@ -319,14 +319,16 @@ fn matrix_slice() {
 
 #[test]
 fn vector_slice() {
-    let v = Vector::from([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+    let v = Vector::from([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
 
-    assert_eq!(v.slice(1), Vector::from([2.0]));
-    assert_eq!(v.slice([0, 3]), Vector::from([1.0, 4.0]));
-    assert_eq!(v.slice(&[1, 2, 3]), Vector::from([2.0, 3.0, 4.0]));
-    assert_eq!(v.slice(&mut [1, 2, 3]), Vector::from([2.0, 3.0, 4.0]));
+    assert_eq!(v.slice(1), Vector::from([1.0]));
+    assert_eq!(v.slice([0, 3]), Vector::from([0.0, 3.0]));
+    assert_eq!(v.slice(&[1, 2, 3]), Vector::from([1.0, 2.0, 3.0]));
+    assert_eq!(v.slice(&mut [1, 2, 3]), Vector::from([1.0, 2.0, 3.0]));
     assert_eq!(v.slice(v.range()), v.clone());
-    assert_eq!(v.slice(Range::<3, 6>()), Vector::from([4.0, 5.0, 6.0]));
+    assert_eq!(v.slice(Range::<3, 6>()), Vector::from([3.0, 4.0, 5.0]));
+    assert_eq!(v.slice(RangeWithStep::<3, 6, 2>()), Vector::from([3.0, 5.0]));
+    assert_eq!(v.slice(Range::<3, 3>().step_by::<2>()), Vector::from([]));
 }
 
 #[test]
