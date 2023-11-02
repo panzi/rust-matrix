@@ -10,6 +10,7 @@ pub mod ops;
 pub mod range;
 pub mod bycolumn;
 pub mod iter;
+pub mod matrix2;
 
 pub use number::*;
 pub use vector::*;
