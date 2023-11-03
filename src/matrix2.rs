@@ -17,7 +17,7 @@ pub struct Matrix<const X: usize, const Y: usize, T: Number=f64, D: AsRef<[T; X 
 where [T; X * Y]: Sized
 {
     data: D,
-    phantom_data: PhantomData<T>,
+    phantom_data: PhantomData::<T>,
 }
 
 impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> Matrix<X, Y, T, D>
@@ -29,27 +29,29 @@ where [T; X * Y]: Sized
 
     #[inline]
     pub fn new(data: D) -> Self {
-        Self { data, phantom_data: PhantomData() }
+        Self { data, phantom_data: PhantomData::<T> }
     }
 
     #[inline]
     pub fn iter(&self) -> impl std::iter::Iterator<Item = &T> {
-        self.data.iter()
+        self.data().iter()
     }
 
     #[inline]
-    pub fn iter_mut(&mut self) -> impl std::iter::Iterator<Item = &mut T> {
-        self.data.iter_mut()
+    pub fn iter_mut(&mut self) -> impl std::iter::Iterator<Item = &mut T>
+    where D: AsMut<[T; X * Y]> {
+        self.data_mut().iter_mut()
     }
 
     #[inline]
     pub fn iter_arrays(&self) -> impl std::iter::Iterator<Item = &[T; X]> {
-        unsafe { self.data.as_chunks_unchecked::<X>() }.iter()
+        unsafe { self.data().as_chunks_unchecked::<X>() }.iter()
     }
 
     #[inline]
-    pub fn iter_arrays_mut(&mut self) -> impl std::iter::Iterator<Item = &mut [T; X]> {
-        unsafe { self.data.as_chunks_unchecked_mut::<X>() }.iter_mut()
+    pub fn iter_arrays_mut(&mut self) -> impl std::iter::Iterator<Item = &mut [T; X]>
+    where D: AsMut<[T; X * Y]> {
+        unsafe { self.data_mut().as_chunks_unchecked_mut::<X>() }.iter_mut()
     }
 /*
     #[inline]
@@ -104,22 +106,24 @@ where [T; X * Y]: Sized
 */
     #[inline]
     pub fn get(&self, x: usize, y: usize) -> Option<&T> {
-        self.data.get(y * X + x)
+        self.data().get(y * X + x)
     }
 
     #[inline]
-    pub fn get_mut(&mut self, x: usize, y: usize) -> Option<&mut T> {
-        self.data.get_mut(y * X + x)
+    pub fn get_mut(&mut self, x: usize, y: usize) -> Option<&mut T>
+    where D: AsMut<[T; X * Y]> {
+        self.data_mut().get_mut(y * X + x)
     }
 
     #[inline]
     pub fn index(&self, x: usize, y: usize) -> &T {
-        &self.data[X * y + x]
+        &self.data()[X * y + x]
     }
 
     #[inline]
-    pub fn index_mut(&mut self, x: usize, y: usize) -> &mut T {
-        &mut self.data[X * y + x]
+    pub fn index_mut(&mut self, x: usize, y: usize) -> &mut T
+    where D: AsMut<[T; X * Y]> {
+        &mut self.data_mut()[X * y + x]
     }
 
     #[inline]
@@ -139,41 +143,43 @@ where [T; X * Y]: Sized
     }
 
     #[inline]
-    pub fn into_vector(self) -> Vector<{ X * Y }, T> {
+    pub fn into_vector(self) -> Vector<{ X * Y }, T>
+    where D: Into<Vector<{ X * Y }, T>> {
         self.data.into()
     }
-
+/*
+    // XXX: compiler crash!
     #[inline]
     pub fn reshape<const X2: usize, const Y2: usize>(&self) -> Matrix<X2, Y2, T>
     where [T; X2 * Y2]: Sized, Assert<{ X * Y == X2 * Y2 }>: IsTrue {
         Matrix::from(self)
     }
-
+    // XXX: compiler crash!
     #[inline]
-    pub fn into_reshape<const X2: usize, const Y2: usize>(self) -> Matrix<X2, Y2, T, D>
+    pub fn into_reshape<const X2: usize, const Y2: usize>(self) -> Matrix<X2, Y2, T>
     where [T; X2 * Y2]: Sized, Assert<{ X * Y == X2 * Y2 }>: IsTrue, TypeEq<D, Box<[T; X * Y]>>: IsTrue {
         // XXX: is this correct?
         unsafe { std::mem::transmute(self) }
     }
-
+    // XXX: compiler crash!
     #[inline]
     pub fn map<F, U>(&self, f: F) -> Matrix<X, Y, U>
     where F: FnMut(T) -> U, U: Number {
-        Matrix { data: Box::new(self.data.map(f)), phantom_data: PhantomData() }
+        Matrix { data: Box::new(self.data.map(f)), phantom_data: PhantomData::<T> }
     }
-
+*/
     #[inline]
     pub fn map_assign<F>(&mut self, mut f: F)
-    where F: FnMut(T) -> T {
-        for x in self.data.iter_mut() {
+    where F: FnMut(T) -> T, D: AsMut<[T; X * Y]> {
+        for x in self.data_mut().iter_mut() {
             *x = f(*x);
         }
     }
 
     #[inline]
     pub fn into_map<F>(mut self, mut f: F) -> Self
-    where F: FnMut(T) -> T {
-        for x in self.data.iter_mut() {
+    where F: FnMut(T) -> T, D: AsMut<[T; X * Y]> {
+        for x in self.data_mut().iter_mut() {
             *x = f(*x);
         }
         self
@@ -183,7 +189,7 @@ where [T; X * Y]: Sized
     pub fn fold_row<F, B>(&self, y: usize, init: B, f: F) -> B
     where F: FnMut(B, T) -> B, B: Number {
         let yoffset = y * X;
-        self.data[yoffset..yoffset + X].iter().cloned().fold(init, f)
+        self.data()[yoffset..yoffset + X].iter().cloned().fold(init, f)
     }
 
     #[inline]
@@ -209,13 +215,13 @@ where [T; X * Y]: Sized
     where T: FromUSize {
         self.sum_column(x) / T::from_usize(Y)
     }
-
+/*
     #[inline]
     pub fn mean_column(&self, x: usize) -> T
     where T: Ord {
         let mut data = self.column(x);
         data.sort();
-        
+
         if Y & 1 != 0 {
             data[Y / 2]
         } else {
@@ -223,7 +229,7 @@ where [T; X * Y]: Sized
             (data[index - 1] + data[index]) / (T::ONE + T::ONE)
         }
     }
-
+*/
     #[inline]
     pub fn product(&self) -> Vector<Y, T> {
         self.fold(T::ONE, |acc, value| acc * value)
@@ -233,8 +239,9 @@ where [T; X * Y]: Sized
     pub fn product_column(&self, x: usize) -> T {
         self.fold_column(x, T::ONE, |acc, value| acc * value)
     }
-
-    pub fn transpose(&self) -> Matrix<Y, X, T, Box<[T; X * Y]>>
+/*
+// XXX: cimpiler crash!
+    pub fn transpose(&self) -> Matrix<Y, X, T>
     where [T; Y * X]: Sized {
         // TODO: MaybeUninit?
         let mut data = Box::new([T::default(); Y * X]);
@@ -246,9 +253,9 @@ where [T; X * Y]: Sized
             }
         }
 
-        Matrix { data, phantom_data: PhantomData() }
+        Matrix { data, phantom_data: PhantomData::<T> }
     }
-
+// XXX: compiler crash!
     pub fn transpose_map<F, U>(&self, mut f: F) -> Matrix<Y, X, U>
     where F: FnMut(T) -> U, U: Number, [T; Y * X]: Sized {
         // TODO: MaybeUninit?
@@ -263,26 +270,30 @@ where [T; X * Y]: Sized
 
         Matrix::from(data)
     }
+*/
 
     #[inline]
     pub fn transpose_assign(&mut self)
-    where [T; Y * X]: Sized, Assert<{ X == Y }>: IsTrue {
+    where [T; Y * X]: Sized, Assert<{ X == Y }>: IsTrue, D: AsMut<[T; X * Y]> {
+        let data = self.data_mut();
         for y in 1..Y {
             let yoffset = y * X;
             for x in 0..y {
-                self.data.swap(yoffset + x, x * X + y);
+                data.swap(yoffset + x, x * X + y);
             }
         }
     }
 
+/*
+// XXX: compiler crash!
     #[inline]
-    pub fn into_transpose(mut self) -> Matrix<Y, X, T, D>
+    pub fn into_transpose(mut self) -> Matrix<Y, X, T>
     where [T; Y * X]: Sized, Assert<{ X == Y }>: IsTrue, TypeEq<D, Box<[T; X * Y]>>: IsTrue {
         self.transpose_assign();
         // XXX: the compiler doesn't understand that X == Y
         unsafe { std::mem::transmute(self) }
     }
-
+*/
 // XXX: Wrong and quadratic performance!
 //    #[inline]
 //    pub fn into_transpose(mut self) -> Matrix<Y, X, T, D>
@@ -346,9 +357,10 @@ where [T; X * Y]: Sized {
     #[inline]
     fn fold<F, B>(&self, init: B, mut f: F) -> Vector<Y, B>
     where F: FnMut(B, T) -> B, B: Number {
+        let data = self.data();
         let mut yoffset = 0;
         let data = Box::new([(); Y].map(|_| {
-            let value = self.data[yoffset..yoffset + X].iter().cloned().fold(init, &mut f);
+            let value = data[yoffset..yoffset + X].iter().cloned().fold(init, &mut f);
             yoffset += X;
             value
         }));
@@ -361,8 +373,9 @@ where [T; X * Y]: Sized {
     fn mean(&self) -> Vector<Y, T>
     where T: Ord {
         let mut yoffset = 0;
+        let data = self.data();
         let data = Box::new([(); Y].map(|_| {
-            let mut data = self.data[yoffset..yoffset + X].to_vec();
+            let mut data = data[yoffset..yoffset + X].to_vec();
             data.sort();
             yoffset += X;
             if X & 1 != 0 {
@@ -377,6 +390,7 @@ where [T; X * Y]: Sized {
     }
 }
 
+/*
 impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> IntoIterator for Matrix<X, Y, T, D>
 where [T; X * Y]: Sized {
     type Item = T;
@@ -425,7 +439,7 @@ where [T; N * N]: Sized {
             data[N * index + index] = T::ONE;
         }
 
-        Self { data, phantom_data: PhantomData() }
+        Self { data, phantom_data: PhantomData::<T> }
     }
 }
 
@@ -436,7 +450,7 @@ where [T; X * Y]: Sized
     fn default() -> Self {
         Self {
             data: Box::new([T::default(); X * Y]),
-            phantom_data: PhantomData()
+            phantom_data: PhantomData::<T>
         }
     }
 }
@@ -603,7 +617,7 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn from(value: Box<[T; X * Y]>) -> Self {
-        Self { data: value, phantom_data: PhantomData() }
+        Self { data: value, phantom_data: PhantomData::<T> }
     }
 }
 
@@ -612,7 +626,7 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn from(value: [T; X * Y]) -> Self {
-        Self { data: Box::new(value), phantom_data: PhantomData() }
+        Self { data: Box::new(value), phantom_data: PhantomData::<T> }
     }
 }
 
@@ -624,7 +638,7 @@ where [T; X * Y]: Sized
     fn from(value: [[T; X]; Y]) -> Self {
         Self {
             data: Box::new(unsafe { std::mem::transmute_copy(&value) }),
-            phantom_data: PhantomData()
+            phantom_data: PhantomData::<T>
         }
     }
 }
@@ -637,7 +651,7 @@ where [T; X * Y]: Sized
     fn from(value: Box<[[T; X]; Y]>) -> Self {
         Self {
             data: unsafe { std::mem::transmute(value) },
-            phantom_data: PhantomData()
+            phantom_data: PhantomData::<T>
         }
     }
 }
@@ -650,7 +664,7 @@ where [T; X * Y]: Sized
     fn from(value: &[[T; X]; Y]) -> Self {
         Self {
             data: Box::new(unsafe { std::mem::transmute_copy(value) }),
-            phantom_data: PhantomData()
+            phantom_data: PhantomData::<T>
         }
     }
 }
@@ -665,7 +679,7 @@ where [T; X * Y]: Sized
         for y in 0..Y {
             data[y * X..(y + 1) * X].copy_from_slice(value[y]);
         }
-        Self { data, phantom_data: PhantomData() }
+        Self { data, phantom_data: PhantomData::<T> }
     }
 }
 
@@ -688,7 +702,7 @@ where [T; X * Y]: Sized
         for y in 0..Y {
             data[y * X..(y + 1) * X].copy_from_slice(value[y].data());
         }
-        Self { data, phantom_data: PhantomData() }
+        Self { data, phantom_data: PhantomData::<T> }
     }
 }
 
@@ -711,7 +725,7 @@ where [T; X * Y]: Sized
         for y in 0..Y {
             data[y * X..(y + 1) * X].copy_from_slice(value[y].data());
         }
-        Self { data, phantom_data: PhantomData() }
+        Self { data, phantom_data: PhantomData::<T> }
     }
 }
 
@@ -730,7 +744,7 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn from(value: &Vector<{X * Y}, T>) -> Self {
-        Self { data: Box::new(*value.data()), phantom_data: PhantomData() }
+        Self { data: Box::new(*value.data()), phantom_data: PhantomData::<T> }
     }
 }
 
@@ -739,7 +753,7 @@ where [T; X * Y]: Sized
 {
     #[inline]
     fn from(value: T) -> Self {
-        Self { data: Box::new([value; X * Y]), phantom_data: PhantomData() }
+        Self { data: Box::new([value; X * Y]), phantom_data: PhantomData::<T> }
     }
 }
 
@@ -749,15 +763,15 @@ where [T; X * Y]: Sized
     #[inline]
     fn from(value: &T) -> Self {
         let value = *value;
-        Self { data: Box::new([value; X * Y]), phantom_data: PhantomData() }
+        Self { data: Box::new([value; X * Y]), phantom_data: PhantomData::<T> }
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> From<Matrix<X, Y, T>> for [T; X * Y]
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> From<Matrix<X, Y, T, D>> for [T; X * Y]
 where [T; X * Y]: Sized, D: Into<[T; X * Y]>
 {
     #[inline]
-    fn from(value: Matrix<X, Y, T>) -> Self {
+    fn from(value: Matrix<X, Y, T, D>) -> Self {
         value.data.into()
     }
 }
@@ -771,7 +785,7 @@ where [T; X * Y]: Sized, D: Into<[T; X * Y]>
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, D: Into<[T; X * Y]>> From<&Matrix<X, Y, T, D>> for Vector<{X * Y}, T>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> From<&Matrix<X, Y, T, D>> for Vector<{X * Y}, T>
 where [T; X * Y]: Sized
 {
     #[inline]
@@ -780,7 +794,7 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number, D: Into<[T; X * Y]>> From<Matrix<X, Y, T, D>> for Box<[T; X * Y]>
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> From<Matrix<X, Y, T, D>> for Box<[T; X * Y]>
 where [T; X * Y]: Sized, TypeEq<D, Box<[T; X * Y]>>: IsTrue
 {
     #[inline]
@@ -789,11 +803,11 @@ where [T; X * Y]: Sized, TypeEq<D, Box<[T; X * Y]>>: IsTrue
     }
 }
 
-impl<const X: usize, const Y: usize, T: Number> From<Matrix<X, Y, T>> for [[T; X]; Y]
+impl<const X: usize, const Y: usize, T: Number, D: AsRef<[T; X * Y]>> From<Matrix<X, Y, T, D>> for [[T; X]; Y]
 where [T; X * Y]: Sized
 {
     #[inline]
-    fn from(value: Matrix<X, Y, T>) -> Self {
+    fn from(value: Matrix<X, Y, T, D>) -> Self {
         <[[T; X]; Y]>::from(&value)
     }
 }
@@ -808,16 +822,19 @@ where [T; X * Y]: Sized
     }
 }
 
-impl<const X1: usize, const Y1: usize, const X2: usize, const Y2: usize, T: Number> From<&Matrix<X1, Y1, T>> for Matrix<X2, Y2, T>
+impl<const X1: usize, const Y1: usize, D1: AsRef<[T; X1 * Y1]>, const X2: usize, const Y2: usize, T: Number> From<&Matrix<X1, Y1, T, D1>> for Matrix<X2, Y2, T>
 where [T; X1 * Y1]: Sized, [T; X2 * Y2]: Sized, Assert<{ X1 * Y1 == X2 * Y2 }>: IsTrue
 {
     #[inline]
     fn from(value: &Matrix<X1, Y1, T>) -> Self {
         let data = &*value.data;
-        Self { data: Box::new(unsafe { std::mem::transmute_copy(data) }) }
+        Self {
+            data: Box::new(unsafe { std::mem::transmute_copy(data) }),
+            phantom_data: PhantomData::<T>
+        }
     }
 }
-
+/*
 // ======== Index ==============================================================
 
 impl<const X: usize, const Y: usize, T: Number> Index<usize> for Matrix<X, Y, T>
@@ -2080,3 +2097,5 @@ where [T; N * N]: Sized {
 }
 
 // TODO: impl Cross, CrossAssign, EigenValue, EigenVector etc.
+*/
+*/
