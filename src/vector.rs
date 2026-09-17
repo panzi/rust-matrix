@@ -159,7 +159,7 @@ impl<const N: usize, T: Number> IntoIterator for Vector<N, T> {
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
+        (*self.data).into_iter()
     }
 }
 

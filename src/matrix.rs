@@ -376,7 +376,7 @@ where [T; X * Y]: Sized {
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.data.into_iter()
+        (*self.data).into_iter()
     }
 }
 
